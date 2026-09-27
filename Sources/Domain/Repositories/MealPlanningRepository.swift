@@ -1,0 +1,32 @@
+import Foundation
+
+/// Storage contract for meal plans and pantry batches. Save methods upsert by ID.
+protocol MealPlanningRepository: Sendable {
+    func saveMeal(_ meal: Meal) async throws
+
+    func saveIngredient(_ ingredient: Ingredient) async throws
+
+    func saveMealPlanEntry(_ entry: MealPlanEntry) async throws
+
+    /// Atomically saves the recipe and entry; leaves neither on failure.
+    func savePlannedMeal(_ entry: MealPlanEntry) async throws
+
+    /// Returns future, unfinished entries in date order.
+    func fetchUpcomingMeals() async throws -> [MealPlanEntry]
+
+    /// Returns entries in `[start, end)`, oldest first.
+    func fetchMealPlanEntries(
+        from start: Date,
+        to end: Date,
+        includingPrepared includePrepared: Bool
+    ) async throws -> [MealPlanEntry]
+
+    /// Returns pantry batches with positive quantity.
+    func fetchAvailableIngredients() async throws -> [Ingredient]
+
+    /// Returns available batches expiring before `date`.
+    func fetchIngredientsExpiring(before date: Date) async throws -> [Ingredient]
+
+    /// Updates an existing entry; throws if its ID is missing.
+    func updateMealPlanEntry(_ entry: MealPlanEntry) async throws
+}
