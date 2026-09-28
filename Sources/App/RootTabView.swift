@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// The stable top-level navigation shared by all feature modules.
 struct RootTabView: View {
     @State private var selection: AppTab = .today
 
@@ -33,7 +32,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .today: "Today"
         case .plan: "Meal Plan"
         case .pantry: "Pantry"
-        case .shopping: "Shopping"
+        case .shopping: "Shopping List"
         }
     }
 
