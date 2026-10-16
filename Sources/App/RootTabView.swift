@@ -1,14 +1,20 @@
 import SwiftUI
 
+@MainActor
 struct RootTabView: View {
     @State private var selection: AppTab = .today
+    let repository: any MealPlanningRepository
 
     var body: some View {
         TabView(selection: $selection) {
             ForEach(AppTab.allCases) { tab in
                 NavigationStack {
-                    FeaturePlaceholderView(tab: tab)
-                        .navigationTitle(tab.title)
+                    if tab == .today {
+                        TodayView(repository: repository) { selection = .plan }
+                    } else {
+                        FeaturePlaceholderView(tab: tab)
+                            .navigationTitle(tab.title)
+                    }
                 }
                 .tabItem {
                     Label(tab.title, systemImage: tab.systemImage)
@@ -68,5 +74,5 @@ private struct FeaturePlaceholderView: View {
 }
 
 #Preview {
-    RootTabView()
+    RootTabView(repository: MockMealPlanningRepository.demo())
 }
