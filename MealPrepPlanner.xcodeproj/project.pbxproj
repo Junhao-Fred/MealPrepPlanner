@@ -15,6 +15,7 @@
 		A00000000000000000000107 /* MealPlanningRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000207 /* MealPlanningRepository.swift */; };
 		A00000000000000000000108 /* ProjectSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000208 /* ProjectSmokeTests.swift */; };
 		A00000000000000000000109 /* PlanMealUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000209 /* PlanMealUseCase.swift */; };
+		A00000000000000000000140 /* RepositoryError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000240 /* RepositoryError.swift */; };
 		A0000000000000000000010A /* PlanMealUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000020A /* PlanMealUseCaseTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,7 @@
 		A00000000000000000000208 /* ProjectSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSmokeTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000209 /* PlanMealUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanMealUseCase.swift; sourceTree = "<group>"; };
 		A0000000000000000000020A /* PlanMealUseCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanMealUseCaseTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000240 /* RepositoryError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryError.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,7 +61,7 @@
 		A00000000000000000000005 /* Products */ = {isa = PBXGroup; children = (A00000000000000000000011 /* MealPrepPlanner.app */, A00000000000000000000022 /* MealPrepPlannerTests.xctest */); name = Products; sourceTree = "<group>"; };
 		A00000000000000000000006 /* Domain */ = {isa = PBXGroup; children = (A00000000000000000000007 /* Models */, A00000000000000000000008 /* Repositories */, A0000000000000000000000B /* UseCases */); path = Domain; sourceTree = "<group>"; };
 		A00000000000000000000007 /* Models */ = {isa = PBXGroup; children = (A00000000000000000000202 /* Ingredient.swift */, A00000000000000000000203 /* MealIngredient.swift */, A00000000000000000000204 /* Meal.swift */, A00000000000000000000205 /* MealType.swift */, A00000000000000000000206 /* MealPlanEntry.swift */); path = Models; sourceTree = "<group>"; };
-		A00000000000000000000008 /* Repositories */ = {isa = PBXGroup; children = (A00000000000000000000207 /* MealPlanningRepository.swift */); path = Repositories; sourceTree = "<group>"; };
+		A00000000000000000000008 /* Repositories */ = {isa = PBXGroup; children = (A00000000000000000000207 /* MealPlanningRepository.swift */, A00000000000000000000240 /* RepositoryError.swift */); path = Repositories; sourceTree = "<group>"; };
 		A00000000000000000000009 /* Tests */ = {isa = PBXGroup; children = (A0000000000000000000000A /* MealPrepPlannerTests */); path = Tests; sourceTree = "<group>"; };
 		A0000000000000000000000A /* MealPrepPlannerTests */ = {isa = PBXGroup; children = (A00000000000000000000208 /* ProjectSmokeTests.swift */, A0000000000000000000020A /* PlanMealUseCaseTests.swift */); path = MealPrepPlannerTests; sourceTree = "<group>"; };
 		A0000000000000000000000B /* UseCases */ = {isa = PBXGroup; children = (A00000000000000000000209 /* PlanMealUseCase.swift */); path = UseCases; sourceTree = "<group>"; };
@@ -121,7 +123,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109, A00000000000000000000140); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000025 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108, A0000000000000000000010A); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 

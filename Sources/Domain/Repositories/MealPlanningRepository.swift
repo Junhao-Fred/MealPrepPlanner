@@ -1,6 +1,7 @@
 import Foundation
 
 /// Storage contract for meal plans and pantry batches. Save methods upsert by ID.
+/// Storage failures are reported as `RepositoryError`.
 protocol MealPlanningRepository: Sendable {
     func saveMeal(_ meal: Meal) async throws
 
@@ -27,6 +28,6 @@ protocol MealPlanningRepository: Sendable {
     /// Returns available batches expiring before `date`.
     func fetchIngredientsExpiring(before date: Date) async throws -> [Ingredient]
 
-    /// Updates an existing entry; throws if its ID is missing.
+    /// Updates an existing entry; throws `RepositoryError.notFound` if its ID is missing.
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws
 }
