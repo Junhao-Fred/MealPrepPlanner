@@ -1,3 +1,5 @@
+//  Created by Junhao Huang on 2026/9/27.
+
 import Foundation
 
 /// A pantry batch with remaining quantity and optional expiry.

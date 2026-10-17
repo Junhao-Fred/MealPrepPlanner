@@ -1,3 +1,5 @@
+//  Created by Junhao Huang on 2026/9/27.
+
 import Foundation
 
 /// Storage contract for meal plans and pantry batches. Save methods upsert by ID.
