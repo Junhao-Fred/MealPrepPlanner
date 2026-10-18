@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="26600" systemVersion="25A354" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="IngredientEntity" representedClassName="IngredientEntity" syncable="YES">
+        <attribute name="expiryDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <attribute name="quantity" optional="NO" attributeType="Decimal" defaultValueString="0"/>
+        <attribute name="unit" optional="NO" attributeType="String"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="MealEntity" representedClassName="MealEntity" syncable="YES">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="MealIngredientEntity" inverseName="meal" inverseEntity="MealIngredientEntity"/>
+        <relationship name="planEntries" optional="YES" toMany="YES" deletionRule="Deny" destinationEntity="MealPlanEntryEntity" inverseName="meal" inverseEntity="MealPlanEntryEntity"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="MealIngredientEntity" representedClassName="MealIngredientEntity" syncable="YES">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <attribute name="quantity" optional="NO" attributeType="Decimal" defaultValueString="0"/>
+        <attribute name="unit" optional="NO" attributeType="String"/>
+        <relationship name="meal" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MealEntity" inverseName="ingredients" inverseEntity="MealEntity"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="MealPlanEntryEntity" representedClassName="MealPlanEntryEntity" syncable="YES">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isPrepared" optional="NO" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="mealType" optional="NO" attributeType="String"/>
+        <attribute name="scheduledDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="meal" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MealEntity" inverseName="planEntries" inverseEntity="MealEntity"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+</model>

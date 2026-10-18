@@ -6,13 +6,12 @@ import SwiftUI
 struct MealPrepPlannerApp: App {
     var body: some Scene {
         WindowGroup {
-            DayOnePlaceholderView()
+            HomeView()
         }
     }
 }
 
-/// Shows the application shell until the four feature tabs are integrated.
-private struct DayOnePlaceholderView: View {
+private struct HomeView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "fork.knife.circle")
@@ -20,7 +19,7 @@ private struct DayOnePlaceholderView: View {
                 .accessibilityHidden(true)
             Text("MealPrepPlanner")
                 .font(.title.bold())
-            Text("Day 1 foundation is ready")
+            Text("Plan meals for the week")
                 .foregroundStyle(.secondary)
         }
         .padding()

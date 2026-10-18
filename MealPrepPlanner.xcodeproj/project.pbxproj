@@ -19,6 +19,12 @@
 		A00000000000000000000141 /* InMemoryMealRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000241 /* InMemoryMealRepository.swift */; };
 		A00000000000000000000142 /* InMemoryMealRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000242 /* InMemoryMealRepositoryTests.swift */; };
 		A0000000000000000000010A /* PlanMealUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000020A /* PlanMealUseCaseTests.swift */; };
+		A0000000000000000000010B /* ManagedObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000020B /* ManagedObjects.swift */; };
+		A0000000000000000000010C /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000020C /* PersistenceController.swift */; };
+		A0000000000000000000010D /* CoreDataMappings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000020D /* CoreDataMappings.swift */; };
+		A0000000000000000000010E /* CoreDataIngredientStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000020E /* CoreDataIngredientStore.swift */; };
+		A0000000000000000000010F /* MealPrepPlanner.xcdatamodeld in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000020F /* MealPrepPlanner.xcdatamodeld */; };
+		A00000000000000000000110 /* CoreDataIngredientStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000210 /* CoreDataIngredientStoreTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +53,12 @@
 		A00000000000000000000240 /* RepositoryError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryError.swift; sourceTree = "<group>"; };
 		A00000000000000000000241 /* InMemoryMealRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryMealRepository.swift; sourceTree = "<group>"; };
 		A00000000000000000000242 /* InMemoryMealRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryMealRepositoryTests.swift; sourceTree = "<group>"; };
+		A0000000000000000000020B /* ManagedObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedObjects.swift; sourceTree = "<group>"; };
+		A0000000000000000000020C /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		A0000000000000000000020D /* CoreDataMappings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataMappings.swift; sourceTree = "<group>"; };
+		A0000000000000000000020E /* CoreDataIngredientStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataIngredientStore.swift; sourceTree = "<group>"; };
+		A0000000000000000000020F /* MealPrepPlanner.xcdatamodeld */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodeld; path = MealPrepPlanner.xcdatamodeld; sourceTree = "<group>"; };
+		A00000000000000000000210 /* CoreDataIngredientStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataIngredientStoreTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,15 +72,17 @@
 			children = (A00000000000000000000003 /* Sources */, A00000000000000000000009 /* Tests */, A00000000000000000000005 /* Products */);
 			sourceTree = "<group>";
 		};
-		A00000000000000000000003 /* Sources */ = {isa = PBXGroup; children = (A00000000000000000000004 /* App */, A00000000000000000000006 /* Domain */); path = Sources; sourceTree = "<group>"; };
+		A00000000000000000000003 /* Sources */ = {isa = PBXGroup; children = (A00000000000000000000004 /* App */, A00000000000000000000006 /* Domain */, A0000000000000000000000C /* Data */); path = Sources; sourceTree = "<group>"; };
 		A00000000000000000000004 /* App */ = {isa = PBXGroup; children = (A00000000000000000000201 /* MealPrepPlannerApp.swift */); path = App; sourceTree = "<group>"; };
 		A00000000000000000000005 /* Products */ = {isa = PBXGroup; children = (A00000000000000000000011 /* MealPrepPlanner.app */, A00000000000000000000022 /* MealPrepPlannerTests.xctest */); name = Products; sourceTree = "<group>"; };
 		A00000000000000000000006 /* Domain */ = {isa = PBXGroup; children = (A00000000000000000000007 /* Models */, A00000000000000000000008 /* Repositories */, A0000000000000000000000B /* UseCases */); path = Domain; sourceTree = "<group>"; };
 		A00000000000000000000007 /* Models */ = {isa = PBXGroup; children = (A00000000000000000000202 /* Ingredient.swift */, A00000000000000000000203 /* MealIngredient.swift */, A00000000000000000000204 /* Meal.swift */, A00000000000000000000205 /* MealType.swift */, A00000000000000000000206 /* MealPlanEntry.swift */); path = Models; sourceTree = "<group>"; };
 		A00000000000000000000008 /* Repositories */ = {isa = PBXGroup; children = (A00000000000000000000207 /* MealPlanningRepository.swift */, A00000000000000000000240 /* RepositoryError.swift */); path = Repositories; sourceTree = "<group>"; };
 		A00000000000000000000009 /* Tests */ = {isa = PBXGroup; children = (A0000000000000000000000A /* MealPrepPlannerTests */); path = Tests; sourceTree = "<group>"; };
-		A0000000000000000000000A /* MealPrepPlannerTests */ = {isa = PBXGroup; children = (A00000000000000000000208 /* ProjectSmokeTests.swift */, A0000000000000000000020A /* PlanMealUseCaseTests.swift */, A00000000000000000000241 /* InMemoryMealRepository.swift */, A00000000000000000000242 /* InMemoryMealRepositoryTests.swift */); path = MealPrepPlannerTests; sourceTree = "<group>"; };
+		A0000000000000000000000A /* MealPrepPlannerTests */ = {isa = PBXGroup; children = (A00000000000000000000208 /* ProjectSmokeTests.swift */, A0000000000000000000020A /* PlanMealUseCaseTests.swift */, A00000000000000000000241 /* InMemoryMealRepository.swift */, A00000000000000000000242 /* InMemoryMealRepositoryTests.swift */, A00000000000000000000210 /* CoreDataIngredientStoreTests.swift */); path = MealPrepPlannerTests; sourceTree = "<group>"; };
 		A0000000000000000000000B /* UseCases */ = {isa = PBXGroup; children = (A00000000000000000000209 /* PlanMealUseCase.swift */); path = UseCases; sourceTree = "<group>"; };
+		A0000000000000000000000C /* Data */ = {isa = PBXGroup; children = (A0000000000000000000000D /* CoreData */); path = Data; sourceTree = "<group>"; };
+		A0000000000000000000000D /* CoreData */ = {isa = PBXGroup; children = (A0000000000000000000020F /* MealPrepPlanner.xcdatamodeld */, A0000000000000000000020B /* ManagedObjects.swift */, A0000000000000000000020C /* PersistenceController.swift */, A0000000000000000000020D /* CoreDataMappings.swift */, A0000000000000000000020E /* CoreDataIngredientStore.swift */); path = CoreData; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -122,13 +136,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A00000000000000000000015 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000015 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000010F); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000026 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109, A00000000000000000000140); runOnlyForDeploymentPostprocessing = 0; };
-		A00000000000000000000025 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108, A0000000000000000000010A, A00000000000000000000141, A00000000000000000000142); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109, A00000000000000000000140, A0000000000000000000010B, A0000000000000000000010C, A0000000000000000000010D, A0000000000000000000010E); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000025 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108, A0000000000000000000010A, A00000000000000000000141, A00000000000000000000142, A00000000000000000000110); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
