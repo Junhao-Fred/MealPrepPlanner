@@ -33,12 +33,6 @@ final class IngredientEntity: NSManagedObject, ManagedEntity {
     @NSManaged var expiryDate: Date?
 }
 
-extension IngredientEntity {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<IngredientEntity> {
-        NSFetchRequest(entityName: entityName)
-    }
-}
-
 @objc(MealEntity)
 final class MealEntity: NSManagedObject, ManagedEntity {
     static let entityName = "MealEntity"
@@ -47,12 +41,6 @@ final class MealEntity: NSManagedObject, ManagedEntity {
     @NSManaged var name: String?
     @NSManaged var ingredients: NSOrderedSet?
     @NSManaged var planEntries: NSSet?
-}
-
-extension MealEntity {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<MealEntity> {
-        NSFetchRequest(entityName: entityName)
-    }
 }
 
 @objc(MealIngredientEntity)
@@ -66,12 +54,6 @@ final class MealIngredientEntity: NSManagedObject, ManagedEntity {
     @NSManaged var meal: MealEntity?
 }
 
-extension MealIngredientEntity {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<MealIngredientEntity> {
-        NSFetchRequest(entityName: entityName)
-    }
-}
-
 @objc(MealPlanEntryEntity)
 final class MealPlanEntryEntity: NSManagedObject, ManagedEntity {
     static let entityName = "MealPlanEntryEntity"
@@ -81,10 +63,4 @@ final class MealPlanEntryEntity: NSManagedObject, ManagedEntity {
     @NSManaged var mealType: String?
     @NSManaged var isPrepared: Bool
     @NSManaged var meal: MealEntity?
-}
-
-extension MealPlanEntryEntity {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<MealPlanEntryEntity> {
-        NSFetchRequest(entityName: entityName)
-    }
 }
