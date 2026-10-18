@@ -1,3 +1,5 @@
+//  Created by Junhao Huang on 2026/9/27.
+
 import CoreData
 
 enum CoreDataMappingError: Error, Equatable, Sendable {
