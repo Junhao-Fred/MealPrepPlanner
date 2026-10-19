@@ -36,9 +36,21 @@
 		46FD861DB2EFA1F6DA5BE978 /* WidgetRefreshingRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFC8B1B36EF4077A56B9C5A /* WidgetRefreshingRepository.swift */; };
 		63DEFFCA895596469A73C382 /* AppDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CB62FB85958CB8DACD5B11 /* AppDependencies.swift */; };
 		699D6DE946BFDA1978018FBB /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 581F8152E8CD61E7711C04C8 /* AppRootView.swift */; };
+		97400D61AE9C2A88F16D12B5 /* MealPrepPlannerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F38FED18C68E62D52748E3 /* MealPrepPlannerWidget.swift */; };
+		A0F98809665E2B255712DAB4 /* AppGroupConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE9FD395C50067ADE8C1E4A /* AppGroupConfiguration.swift */; };
+		A54EDF6EC76D4BBBC1E72C1F /* MealWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2085F7B25EE313D26346AFCA /* MealWidgetSnapshot.swift */; };
+		A60D9C60E2299538DA1814B8 /* WidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25655EB8F5DF333D434C832C /* WidgetSnapshotStore.swift */; };
+		AD48664AEFDBD65EF61E6470 /* MealPrepPlannerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 93D67C7CD8CD1C7B35F5F74E /* MealPrepPlannerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		CB9F616D9398879C02638596 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B11033E81071776EB97F38B7;
+			remoteInfo = MealPrepPlannerWidgetExtension;
+		};
 		A00000000000000000000021 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A00000000000000000000001 /* Project object */;
@@ -47,6 +59,10 @@
 			remoteInfo = MealPrepPlanner;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C604E518A5A6E35EF45BBB75 /* Embed Foundation Extensions */ = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (AD48664AEFDBD65EF61E6470 /* MealPrepPlannerWidgetExtension.appex in Embed Foundation Extensions */); name = "Embed Foundation Extensions"; runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A00000000000000000000011 /* MealPrepPlanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MealPrepPlanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -82,23 +98,29 @@
 		52CB62FB85958CB8DACD5B11 /* AppDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
 		581F8152E8CD61E7711C04C8 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		6372C209813D2EAA12A973A3 /* MealPrepPlanner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MealPrepPlanner.entitlements; sourceTree = "<group>"; };
+		74F38FED18C68E62D52748E3 /* MealPrepPlannerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealPrepPlannerWidget.swift; sourceTree = "<group>"; };
+		783FC45176E020443372E6CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		931DA13E2429718F47171B05 /* MealPrepPlannerWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MealPrepPlannerWidget.entitlements; sourceTree = "<group>"; };
+		93D67C7CD8CD1C7B35F5F74E /* MealPrepPlannerWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MealPrepPlannerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A00000000000000000000012 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000023 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B6D61A7E4DA9493E2B2805D0 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		A00000000000000000000002 = {
 			isa = PBXGroup;
-			children = (A00000000000000000000003 /* Sources */, A00000000000000000000009 /* Tests */, A00000000000000000000005 /* Products */);
+			children = (A00000000000000000000003 /* Sources */, 731ACD2617D6EB02B61E570B /* WidgetExtension */, A00000000000000000000009 /* Tests */, A00000000000000000000005 /* Products */);
 			sourceTree = "<group>";
 		};
 		A00000000000000000000003 /* Sources */ = {isa = PBXGroup; children = (A00000000000000000000004 /* App */, A00000000000000000000006 /* Domain */, A0000000000000000000000C /* Data */, 06B8FC014E1B50CF0103F793 /* Shared */); path = Sources; sourceTree = "<group>"; };
 		06B8FC014E1B50CF0103F793 /* Shared */ = {isa = PBXGroup; children = (1BE9FD395C50067ADE8C1E4A /* AppGroupConfiguration.swift */, 2085F7B25EE313D26346AFCA /* MealWidgetSnapshot.swift */, 25655EB8F5DF333D434C832C /* WidgetSnapshotStore.swift */); path = Shared; sourceTree = "<group>"; };
 		A00000000000000000000004 /* App */ = {isa = PBXGroup; children = (A00000000000000000000201 /* MealPrepPlannerApp.swift */, 293DE56F7EBC09AF1D64579F /* DataChangeTracker.swift */, 32526F61C2557FF590FC000E /* WidgetSnapshotRefresher.swift */, 3AFC8B1B36EF4077A56B9C5A /* WidgetRefreshingRepository.swift */, 52CB62FB85958CB8DACD5B11 /* AppDependencies.swift */, 581F8152E8CD61E7711C04C8 /* AppRootView.swift */, 6372C209813D2EAA12A973A3 /* MealPrepPlanner.entitlements */); path = App; sourceTree = "<group>"; };
-		A00000000000000000000005 /* Products */ = {isa = PBXGroup; children = (A00000000000000000000011 /* MealPrepPlanner.app */, A00000000000000000000022 /* MealPrepPlannerTests.xctest */); name = Products; sourceTree = "<group>"; };
+		A00000000000000000000005 /* Products */ = {isa = PBXGroup; children = (A00000000000000000000011 /* MealPrepPlanner.app */, A00000000000000000000022 /* MealPrepPlannerTests.xctest */, 93D67C7CD8CD1C7B35F5F74E /* MealPrepPlannerWidgetExtension.appex */); name = Products; sourceTree = "<group>"; };
+		731ACD2617D6EB02B61E570B /* WidgetExtension */ = {isa = PBXGroup; children = (74F38FED18C68E62D52748E3 /* MealPrepPlannerWidget.swift */, 783FC45176E020443372E6CE /* Info.plist */, 931DA13E2429718F47171B05 /* MealPrepPlannerWidget.entitlements */); path = WidgetExtension; sourceTree = "<group>"; };
 		A00000000000000000000006 /* Domain */ = {isa = PBXGroup; children = (A00000000000000000000007 /* Models */, A00000000000000000000008 /* Repositories */, A0000000000000000000000B /* UseCases */); path = Domain; sourceTree = "<group>"; };
 		A00000000000000000000007 /* Models */ = {isa = PBXGroup; children = (A00000000000000000000202 /* Ingredient.swift */, A00000000000000000000203 /* MealIngredient.swift */, A00000000000000000000204 /* Meal.swift */, A00000000000000000000205 /* MealType.swift */, A00000000000000000000206 /* MealPlanEntry.swift */); path = Models; sourceTree = "<group>"; };
 		A00000000000000000000008 /* Repositories */ = {isa = PBXGroup; children = (A00000000000000000000207 /* MealPlanningRepository.swift */, A00000000000000000000240 /* RepositoryError.swift */); path = Repositories; sourceTree = "<group>"; };
@@ -113,9 +135,9 @@
 		A00000000000000000000010 /* MealPrepPlanner */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A00000000000000000000014 /* Build configuration list for PBXNativeTarget "MealPrepPlanner" */;
-			buildPhases = (A00000000000000000000013 /* Sources */, A00000000000000000000012 /* Frameworks */, A00000000000000000000015 /* Resources */);
+			buildPhases = (A00000000000000000000013 /* Sources */, A00000000000000000000012 /* Frameworks */, A00000000000000000000015 /* Resources */, C604E518A5A6E35EF45BBB75 /* Embed Foundation Extensions */);
 			buildRules = ();
-			dependencies = ();
+			dependencies = (CE1775DF154E603C67E38402 /* PBXTargetDependency */);
 			name = MealPrepPlanner;
 			productName = MealPrepPlanner;
 			productReference = A00000000000000000000011 /* MealPrepPlanner.app */;
@@ -132,6 +154,17 @@
 			productReference = A00000000000000000000022 /* MealPrepPlannerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		B11033E81071776EB97F38B7 /* MealPrepPlannerWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D215EDA8BAC55A223A7D7B02 /* Build configuration list for PBXNativeTarget "MealPrepPlannerWidgetExtension" */;
+			buildPhases = (B207C35CAB9298AB3F24E765 /* Sources */, B6D61A7E4DA9493E2B2805D0 /* Frameworks */, C11ED17E91323878F1B7D311 /* Resources */);
+			buildRules = ();
+			dependencies = ();
+			name = MealPrepPlannerWidgetExtension;
+			productName = MealPrepPlannerWidgetExtension;
+			productReference = 93D67C7CD8CD1C7B35F5F74E /* MealPrepPlannerWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -144,6 +177,7 @@
 				TargetAttributes = {
 					A00000000000000000000010 = {CreatedOnToolsVersion = 26.6; ProvisioningStyle = Automatic; };
 					A00000000000000000000020 = {CreatedOnToolsVersion = 26.6; TestTargetID = A00000000000000000000010; };
+					B11033E81071776EB97F38B7 = {CreatedOnToolsVersion = 27.1; };
 				};
 			};
 			buildConfigurationList = A00000000000000000000030 /* Build configuration list for PBXProject */;
@@ -155,37 +189,43 @@
 			productRefGroup = A00000000000000000000005 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
-			targets = (A00000000000000000000010 /* MealPrepPlanner */, A00000000000000000000020 /* MealPrepPlannerTests */);
+			targets = (A00000000000000000000010 /* MealPrepPlanner */, A00000000000000000000020 /* MealPrepPlannerTests */, B11033E81071776EB97F38B7 /* MealPrepPlannerWidgetExtension */);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A00000000000000000000015 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000010F); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000026 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		C11ED17E91323878F1B7D311 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109, A00000000000000000000140, A0000000000000000000010B, A0000000000000000000010C, A0000000000000000000010D, A00000000000000000000143, A00000000000000000000144, 284AE3B6F937C19CD24842B3, 287E15367CCE651FFE57ABBF, 291B6A105022C5FA7727EA0B, 3ED5038CF1A3AF31E458FEF8, 4143BF7CF01DF7C8534F96A7, 46FD861DB2EFA1F6DA5BE978, 63DEFFCA895596469A73C382, 699D6DE946BFDA1978018FBB); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000025 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108, A0000000000000000000010A, A00000000000000000000141, A00000000000000000000142, A00000000000000000000145, A00000000000000000000146, A00000000000000000000147); runOnlyForDeploymentPostprocessing = 0; };
+		B207C35CAB9298AB3F24E765 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (97400D61AE9C2A88F16D12B5, A0F98809665E2B255712DAB4, A54EDF6EC76D4BBBC1E72C1F, A60D9C60E2299538DA1814B8); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		A00000000000000000000027 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = A00000000000000000000010 /* MealPrepPlanner */; targetProxy = A00000000000000000000021 /* PBXContainerItemProxy */; };
+		CE1775DF154E603C67E38402 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = B11033E81071776EB97F38B7 /* MealPrepPlannerWidgetExtension */; targetProxy = CB9F616D9398879C02638596 /* PBXContainerItemProxy */; };
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		A00000000000000000000031 /* Project Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CODE_SIGN_STYLE = Automatic; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_OPTIMIZATION_LEVEL = 0; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
-		A00000000000000000000032 /* Project Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CODE_SIGN_STYLE = Automatic; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; GCC_OPTIMIZATION_LEVEL = s; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+		A00000000000000000000031 /* Project Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CODE_SIGN_STYLE = Automatic; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_OPTIMIZATION_LEVEL = 0; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		A00000000000000000000032 /* Project Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CODE_SIGN_STYLE = Automatic; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; GCC_OPTIMIZATION_LEVEL = s; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
 		A00000000000000000000016 /* App Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = ""; CODE_SIGN_ENTITLEMENTS = Sources/App/MealPrepPlanner.entitlements; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = MealPrepPlanner; INFOPLIST_KEY_UILaunchScreen_Generation = YES; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.manbo.MealPrepPlanner; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Debug; };
 		A00000000000000000000017 /* App Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = ""; CODE_SIGN_ENTITLEMENTS = Sources/App/MealPrepPlanner.entitlements; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = MealPrepPlanner; INFOPLIST_KEY_UILaunchScreen_Generation = YES; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.manbo.MealPrepPlanner; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Release; };
 		A00000000000000000000028 /* Tests Debug */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.manbo.MealPrepPlannerTests; PRODUCT_NAME = "$(TARGET_NAME)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MealPrepPlanner.app/MealPrepPlanner"; }; name = Debug; };
 		A00000000000000000000029 /* Tests Release */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.manbo.MealPrepPlannerTests; PRODUCT_NAME = "$(TARGET_NAME)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MealPrepPlanner.app/MealPrepPlanner"; }; name = Release; };
+		DA2E3CC770ACFECE91CB1A3C /* Widget Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = WidgetExtension/MealPrepPlannerWidget.entitlements; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = WidgetExtension/Info.plist; INFOPLIST_KEY_CFBundleDisplayName = MealPrepPlanner; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks"); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.manbo.MealPrepPlanner.Widget; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Debug; };
+		EC218A8B8932C8810E65FED1 /* Widget Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = WidgetExtension/MealPrepPlannerWidget.entitlements; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = WidgetExtension/Info.plist; INFOPLIST_KEY_CFBundleDisplayName = MealPrepPlanner; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks"); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.manbo.MealPrepPlanner.Widget; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
 		A00000000000000000000014 /* Build configuration list for PBXNativeTarget "MealPrepPlanner" */ = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000016, A00000000000000000000017); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 		A00000000000000000000024 /* Build configuration list for PBXNativeTarget "MealPrepPlannerTests" */ = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000028, A00000000000000000000029); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 		A00000000000000000000030 /* Build configuration list for PBXProject */ = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000031, A00000000000000000000032); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		D215EDA8BAC55A223A7D7B02 /* Build configuration list for PBXNativeTarget "MealPrepPlannerWidgetExtension" */ = {isa = XCConfigurationList; buildConfigurations = (DA2E3CC770ACFECE91CB1A3C, EC218A8B8932C8810E65FED1); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 	};
 	rootObject = A00000000000000000000001 /* Project object */;
