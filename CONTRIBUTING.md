@@ -50,6 +50,28 @@ Every new Swift file starts with a header line naming its author and the date it
 import Foundation
 ```
 
+## Using the repository in screens
+
+`AppRootView` opens the Core Data store at launch and puts an `AppDependencies` in the environment. Screens read and write through it and reload whenever data changes:
+
+```swift
+@Environment(AppDependencies.self) private var dependencies
+
+var body: some View {
+    List { /* ... */ }
+        .task(id: dependencies.changes.version) { await viewModel.load() }
+}
+```
+
+Always write through `dependencies.repository`. Each successful write bumps `changes.version` and refreshes the widget snapshot, so do not call the widget refresher from a screen.
+
+## Widget extension and App Group
+
+- The `MealPrepPlannerWidgetExtension` target lives in `WidgetExtension/`. Its widget is a placeholder that shows the next meal; B replaces the provider and views there.
+- The extension reads `WidgetSnapshotStore().load()` and must not import Core Data or the Domain layer. The files in `Sources/Shared/` belong to both the app and the extension target. If you add a file there, tick both targets.
+- Use `AppGroupConfiguration.widgetKind` as the widget kind, so the app's reload requests reach it.
+- Both targets use the App Group `group.com.manbo.MealPrepPlanner` (`Sources/App/MealPrepPlanner.entitlements` and `WidgetExtension/MealPrepPlannerWidget.entitlements`). The simulator needs no development team. To run on a device, choose your team under Signing & Capabilities for both targets.
+
 ## Before opening a pull request
 
 1. Merge or rebase the latest `develop` into your branch.
@@ -68,3 +90,5 @@ import Foundation
 | C (Mingchen) | `A…160`–`A…16F` | `A…260`–`A…26F` |
 
 Branches created before this rule already overlap: `feature/junhao-core-data` and `feature/zhengyang-root-tabs` both use `A…20B`. Merge those into `develop` one at a time and renumber the second one when resolving the conflict. If you let Xcode add a file instead, it generates random IDs, which is also fine.
+
+A's range is used up. A's new objects from `feature/junhao-app-group` on use random 24-character IDs, like the ones Xcode generates.
