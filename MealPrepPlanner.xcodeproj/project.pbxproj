@@ -31,6 +31,7 @@
 		A00000000000000000000150 = {isa = PBXBuildFile; fileRef = A00000000000000000000250; };
 		A00000000000000000000151 = {isa = PBXBuildFile; fileRef = A00000000000000000000251; };
 		A00000000000000000000152 = {isa = PBXBuildFile; fileRef = A00000000000000000000252; };
+		A00000000000000000000153 = {isa = PBXBuildFile; fileRef = A00000000000000000000253; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 		A00000000000000000000250 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 		A00000000000000000000251 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpiryRules.swift; sourceTree = "<group>"; };
 		A00000000000000000000252 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindIngredientsToUseSoonUseCase.swift; sourceTree = "<group>"; };
+		A00000000000000000000253 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpiryRulesTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,7 +93,7 @@
 		A00000000000000000000007 /* Models */ = {isa = PBXGroup; children = (A00000000000000000000202 /* Ingredient.swift */, A00000000000000000000203 /* MealIngredient.swift */, A00000000000000000000204 /* Meal.swift */, A00000000000000000000205 /* MealType.swift */, A00000000000000000000206 /* MealPlanEntry.swift */); path = Models; sourceTree = "<group>"; };
 		A00000000000000000000008 /* Repositories */ = {isa = PBXGroup; children = (A00000000000000000000207 /* MealPlanningRepository.swift */, A00000000000000000000240 /* RepositoryError.swift */); path = Repositories; sourceTree = "<group>"; };
 		A00000000000000000000009 /* Tests */ = {isa = PBXGroup; children = (A0000000000000000000000A /* MealPrepPlannerTests */); path = Tests; sourceTree = "<group>"; };
-		A0000000000000000000000A /* MealPrepPlannerTests */ = {isa = PBXGroup; children = (A00000000000000000000208 /* ProjectSmokeTests.swift */, A0000000000000000000020A /* PlanMealUseCaseTests.swift */, A00000000000000000000241 /* InMemoryMealRepository.swift */, A00000000000000000000242 /* InMemoryMealRepositoryTests.swift */, A00000000000000000000245 /* CoreDataMealRepositoryTests.swift */, A00000000000000000000246 /* RepositoryErrorMappingTests.swift */, A00000000000000000000247 /* CoreDataUpsertTests.swift */); path = MealPrepPlannerTests; sourceTree = "<group>"; };
+		A0000000000000000000000A /* MealPrepPlannerTests */ = {isa = PBXGroup; children = (A00000000000000000000208 /* ProjectSmokeTests.swift */, A0000000000000000000020A /* PlanMealUseCaseTests.swift */, A00000000000000000000241 /* InMemoryMealRepository.swift */, A00000000000000000000242 /* InMemoryMealRepositoryTests.swift */, A00000000000000000000245 /* CoreDataMealRepositoryTests.swift */, A00000000000000000000246 /* RepositoryErrorMappingTests.swift */, A00000000000000000000247 /* CoreDataUpsertTests.swift */, A00000000000000000000253); path = MealPrepPlannerTests; sourceTree = "<group>"; };
 		A0000000000000000000000B /* UseCases */ = {isa = PBXGroup; children = (A00000000000000000000209 /* PlanMealUseCase.swift */, A00000000000000000000251, A00000000000000000000252); path = UseCases; sourceTree = "<group>"; };
 		A0000000000000000000000C /* Data */ = {isa = PBXGroup; children = (A0000000000000000000000D /* CoreData */); path = Data; sourceTree = "<group>"; };
 		A0000000000000000000000D /* CoreData */ = {isa = PBXGroup; children = (A0000000000000000000020F /* MealPrepPlanner.xcdatamodeld */, A0000000000000000000020B /* ManagedObjects.swift */, A0000000000000000000020C /* PersistenceController.swift */, A0000000000000000000020D /* CoreDataMappings.swift */, A00000000000000000000243 /* CoreDataErrorMapping.swift */, A00000000000000000000244 /* CoreDataMealRepository.swift */); path = CoreData; sourceTree = "<group>"; };
@@ -154,7 +156,7 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109, A00000000000000000000140, A0000000000000000000010B, A0000000000000000000010C, A0000000000000000000010D, A00000000000000000000143, A00000000000000000000144, A00000000000000000000150, A00000000000000000000151, A00000000000000000000152); runOnlyForDeploymentPostprocessing = 0; };
-		A00000000000000000000025 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108, A0000000000000000000010A, A00000000000000000000141, A00000000000000000000142, A00000000000000000000145, A00000000000000000000146, A00000000000000000000147); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000025 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108, A0000000000000000000010A, A00000000000000000000141, A00000000000000000000142, A00000000000000000000145, A00000000000000000000146, A00000000000000000000147, A00000000000000000000153); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
