@@ -65,6 +65,22 @@ var body: some View {
 
 Always write through `dependencies.repository`. Each successful write bumps `changes.version` and refreshes the widget snapshot, so do not call the widget refresher from a screen.
 
+## SwiftUI previews
+
+`InMemoryMealRepository` and `PreviewData` are compiled into debug builds of the app, so previews never need Core Data:
+
+```swift
+#Preview("Sample week") {
+    TodayView().environment(AppDependencies.preview())
+}
+
+#Preview("Empty") {
+    TodayView().environment(AppDependencies.preview(repository: InMemoryMealRepository()))
+}
+```
+
+`PreviewData` covers a prepared breakfast, lunch and dinner today, meals on the next days, and stock that expires today, within three days, has expired, or has no date. The tomato meals match the demo: 300 g and 250 g needed, 200 g in stock, 350 g to buy. To preview an error state, call `repository.fail(.read, with: .readFailed)` in the preview's `.task`. Wrap any preview code that uses these types in `#if DEBUG`, because they are not in release builds.
+
 ## Widget extension and App Group
 
 - The `MealPrepPlannerWidgetExtension` target lives in `WidgetExtension/`. Its widget is a placeholder that shows the next meal; B replaces the provider and views there.
@@ -77,7 +93,7 @@ Always write through `dependencies.repository`. Each successful write bumps `cha
 1. Merge or rebase the latest `develop` into your branch.
 2. Build in Xcode with zero warnings.
 3. Run all tests with ⌘U and make sure they pass.
-4. Use `InMemoryMealRepository` (in the test target) for use case and ViewModel tests instead of Core Data.
+4. Use `InMemoryMealRepository` (in `Sources/Data/InMemory`, debug builds only) for use case and ViewModel tests instead of Core Data.
 
 ## Xcode project file IDs
 
