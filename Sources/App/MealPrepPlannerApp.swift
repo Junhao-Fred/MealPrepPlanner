@@ -6,7 +6,9 @@ import SwiftUI
 struct MealPrepPlannerApp: App {
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            AppRootView {
+                HomeView()
+            }
         }
     }
 }
