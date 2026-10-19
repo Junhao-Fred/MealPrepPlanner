@@ -6,22 +6,7 @@ import SwiftUI
 struct MealPrepPlannerApp: App {
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootTabView()
         }
-    }
-}
-
-private struct HomeView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "fork.knife.circle")
-                .font(.system(size: 52))
-                .accessibilityHidden(true)
-            Text("MealPrepPlanner")
-                .font(.title.bold())
-            Text("Plan meals for the week")
-                .foregroundStyle(.secondary)
-        }
-        .padding()
     }
 }

@@ -28,6 +28,7 @@
 		A00000000000000000000145 /* CoreDataMealRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000245 /* CoreDataMealRepositoryTests.swift */; };
 		A00000000000000000000146 /* RepositoryErrorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000246 /* RepositoryErrorMappingTests.swift */; };
 		A00000000000000000000147 /* CoreDataUpsertTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000247 /* CoreDataUpsertTests.swift */; };
+		A00000000000000000000150 = {isa = PBXBuildFile; fileRef = A00000000000000000000250; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +66,7 @@
 		A00000000000000000000245 /* CoreDataMealRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataMealRepositoryTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000246 /* RepositoryErrorMappingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryErrorMappingTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000247 /* CoreDataUpsertTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataUpsertTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000250 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,7 +81,7 @@
 			sourceTree = "<group>";
 		};
 		A00000000000000000000003 /* Sources */ = {isa = PBXGroup; children = (A00000000000000000000004 /* App */, A00000000000000000000006 /* Domain */, A0000000000000000000000C /* Data */); path = Sources; sourceTree = "<group>"; };
-		A00000000000000000000004 /* App */ = {isa = PBXGroup; children = (A00000000000000000000201 /* MealPrepPlannerApp.swift */); path = App; sourceTree = "<group>"; };
+		A00000000000000000000004 /* App */ = {isa = PBXGroup; children = (A00000000000000000000201 /* MealPrepPlannerApp.swift */, A00000000000000000000250); path = App; sourceTree = "<group>"; };
 		A00000000000000000000005 /* Products */ = {isa = PBXGroup; children = (A00000000000000000000011 /* MealPrepPlanner.app */, A00000000000000000000022 /* MealPrepPlannerTests.xctest */); name = Products; sourceTree = "<group>"; };
 		A00000000000000000000006 /* Domain */ = {isa = PBXGroup; children = (A00000000000000000000007 /* Models */, A00000000000000000000008 /* Repositories */, A0000000000000000000000B /* UseCases */); path = Domain; sourceTree = "<group>"; };
 		A00000000000000000000007 /* Models */ = {isa = PBXGroup; children = (A00000000000000000000202 /* Ingredient.swift */, A00000000000000000000203 /* MealIngredient.swift */, A00000000000000000000204 /* Meal.swift */, A00000000000000000000205 /* MealType.swift */, A00000000000000000000206 /* MealPlanEntry.swift */); path = Models; sourceTree = "<group>"; };
@@ -147,7 +149,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109, A00000000000000000000140, A0000000000000000000010B, A0000000000000000000010C, A0000000000000000000010D, A00000000000000000000143, A00000000000000000000144); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000013 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000101, A00000000000000000000102, A00000000000000000000103, A00000000000000000000104, A00000000000000000000105, A00000000000000000000106, A00000000000000000000107, A00000000000000000000109, A00000000000000000000140, A0000000000000000000010B, A0000000000000000000010C, A0000000000000000000010D, A00000000000000000000143, A00000000000000000000144, A00000000000000000000150); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000025 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108, A0000000000000000000010A, A00000000000000000000141, A00000000000000000000142, A00000000000000000000145, A00000000000000000000146, A00000000000000000000147); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
