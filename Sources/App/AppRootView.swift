@@ -56,3 +56,17 @@ struct AppRootView<Content: View>: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Loaded") {
+    AppRootView(makeDependencies: { .preview() }) {
+        Text("App content")
+    }
+}
+
+#Preview("Store unavailable") {
+    AppRootView(makeDependencies: { throw RepositoryError.storeUnavailable }) {
+        Text("App content")
+    }
+}
+#endif
