@@ -18,8 +18,9 @@ final class PersistenceController {
         try await makeController(storeDescription: inMemoryStoreDescription())
     }
 
-    static func makePersistent() async throws -> PersistenceController {
-        try await makeController()
+    /// Opens the SQLite store at the default location, or at `storeURL` when given.
+    static func makePersistent(storeURL: URL? = nil) async throws -> PersistenceController {
+        try await makeController(storeDescription: storeURL.map { NSPersistentStoreDescription(url: $0) })
     }
 
     private static func makeController(
