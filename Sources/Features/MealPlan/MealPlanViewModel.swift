@@ -16,10 +16,12 @@ final class MealPlanViewModel {
     private(set) var rangeStart: Date
     private(set) var days: [MealPlanDay] = []
     private(set) var isLoading = false
+    private(set) var isSaving = false
     private(set) var hasLoaded = false
     private(set) var errorMessage: String?
 
     private let useCase: GetMealPlanUseCase
+    private let saveUseCase: PlanMealUseCase
     private let calendar: Calendar
     private let now: @Sendable () -> Date
 
@@ -29,9 +31,20 @@ final class MealPlanViewModel {
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         useCase = GetMealPlanUseCase(repository: repository)
+        saveUseCase = PlanMealUseCase(repository: repository, now: now)
         self.calendar = calendar
         self.now = now
         rangeStart = calendar.startOfDay(for: now())
+    }
+
+    var isBusy: Bool { isLoading || isSaving }
+
+    func makeDraft() -> MealEntryDraft {
+        MealEntryDraft(scheduledDate: max(rangeStart, now().addingTimeInterval(3_600)))
+    }
+
+    func clearError() {
+        errorMessage = nil
     }
 
     /// Last included calendar day, for display. Queries exclude midnight of the next day.
@@ -41,22 +54,16 @@ final class MealPlanViewModel {
 
     /// Refresh failure keeps the previous list for this range; errors remain visible for retry.
     func load() async {
-        guard !isLoading else { return }
+        guard !isBusy else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
         do {
             try Task.checkCancellation()
-            guard let end = calendar.date(byAdding: .day, value: 7, to: rangeStart), end > rangeStart else {
-                throw MealPlanQueryError.invalidDateRange
-            }
-            let entries = try await useCase.execute(from: rangeStart, to: end, includingPrepared: true)
+            let result = try await fetchDays()
             try Task.checkCancellation()
-            let grouped = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.scheduledDate) }
-            days = grouped.keys.sorted().map { date in
-                MealPlanDay(date: date, entries: grouped[date] ?? [])
-            }
+            days = result
             hasLoaded = true
         } catch is CancellationError {
         } catch let error as RepositoryError {
@@ -70,7 +77,7 @@ final class MealPlanViewModel {
 
     /// Clears old results when changing dates, so a failed query cannot show the wrong week's meals.
     func showRange(starting date: Date) async {
-        guard !isLoading else { return }
+        guard !isBusy else { return }
         let start = calendar.startOfDay(for: date)
         if start != rangeStart {
             rangeStart = start
@@ -82,5 +89,57 @@ final class MealPlanViewModel {
 
     func showToday() async {
         await showRange(starting: now())
+    }
+
+    /// True means the write succeeded. A later refresh failure must be retried as a read.
+    func save(_ entry: MealPlanEntry) async -> Bool {
+        guard !isBusy else { return false }
+        isSaving = true
+        errorMessage = nil
+        defer { isSaving = false }
+
+        do {
+            try Task.checkCancellation()
+            try await saveUseCase.execute(entry)
+        } catch is CancellationError {
+            return false
+        } catch let error as MealPlanningValidationError {
+            switch error {
+            case .emptyMealName: errorMessage = "Enter a meal name."
+            case .emptyIngredients: errorMessage = "Add at least one ingredient."
+            case .invalidIngredient: errorMessage = "Each ingredient needs a name, a positive quantity and a unit."
+            case .scheduledInThePast: errorMessage = "Choose a future date and time."
+            }
+            return false
+        } catch {
+            errorMessage = "Unable to save your meal. Please try again."
+            return false
+        }
+
+        // Make plans outside the currently displayed week visible after saving.
+        let end = calendar.date(byAdding: .day, value: 7, to: rangeStart) ?? rangeStart
+        if entry.scheduledDate < rangeStart || entry.scheduledDate >= end {
+            rangeStart = calendar.startOfDay(for: entry.scheduledDate)
+            days = []
+            hasLoaded = false
+        }
+        do {
+            days = try await fetchDays()
+            hasLoaded = true
+        } catch {
+            errorMessage = "Meal saved. Unable to refresh the list. Refresh to try again."
+        }
+        return true
+    }
+
+    private func fetchDays() async throws -> [MealPlanDay] {
+        guard let end = calendar.date(byAdding: .day, value: 7, to: rangeStart), end > rangeStart else {
+            throw MealPlanQueryError.invalidDateRange
+        }
+        let entries = try await useCase.execute(from: rangeStart, to: end, includingPrepared: true)
+        let grouped = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.scheduledDate) }
+        return grouped.keys.sorted().map { date in
+            MealPlanDay(date: date, entries: grouped[date] ?? [])
+        }
     }
 }

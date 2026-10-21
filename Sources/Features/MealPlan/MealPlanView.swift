@@ -7,6 +7,7 @@ import SwiftUI
 struct MealPlanView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: MealPlanViewModel
+    @State private var showingAddMeal = false
 
     init(model: MealPlanViewModel) {
         _model = State(initialValue: model)
@@ -16,9 +17,9 @@ struct MealPlanView: View {
         List {
             Section {
                 DatePicker("Starting date", selection: startDate, displayedComponents: .date)
-                    .disabled(model.isLoading)
+                    .disabled(model.isBusy)
                 Button("Start from Today") { Task { await model.showToday() } }
-                    .disabled(model.isLoading)
+                    .disabled(model.isBusy)
             } footer: {
                 Text("Seven days through \(model.lastDay.formatted(date: .abbreviated, time: .omitted)), including prepared meals.")
             }
@@ -34,7 +35,7 @@ struct MealPlanView: View {
                     Label(message, systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.secondary)
                     Button("Retry") { Task { await model.load() } }
-                        .disabled(model.isLoading)
+                        .disabled(model.isBusy)
                 }
             }
 
@@ -46,6 +47,8 @@ struct MealPlanView: View {
                             systemImage: "calendar",
                             description: Text("There are no meals in this date range. Choose another starting date to browse your plans.")
                         )
+                        Button("Add Meal", action: addMeal)
+                            .disabled(model.isBusy)
                     } else {
                         Button("Load Meal Plan") { Task { await model.load() } }
                     }
@@ -64,20 +67,31 @@ struct MealPlanView: View {
         }
         .navigationTitle("Meal Plan")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
                     Task { await model.load() }
                 } label: {
                     Label("Refresh meal plan", systemImage: "arrow.clockwise")
                 }
-                .disabled(model.isLoading)
+                .disabled(model.isBusy)
+                Button(action: addMeal) {
+                    Label("Add meal", systemImage: "plus")
+                }
+                .disabled(model.isBusy)
             }
         }
         .refreshable { await model.load() }
         .task { await model.load() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await model.load() } }
+            if phase == .active && !showingAddMeal { Task { await model.load() } }
         }
+        .sheet(isPresented: $showingAddMeal) { AddMealView(model: model) }
+    }
+
+    private func addMeal() {
+        guard !model.isBusy else { return }
+        model.clearError()
+        showingAddMeal = true
     }
 
     private var startDate: Binding<Date> {
