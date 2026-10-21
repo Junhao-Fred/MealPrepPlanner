@@ -61,6 +61,7 @@ struct SnapshotTimelineProvider: TimelineProvider {
 struct MealWidgetView: View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.calendar) private var calendar
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let entry: SnapshotEntry
 
     private var nextMeal: MealWidgetSnapshot.Meal? {
@@ -79,13 +80,15 @@ struct MealWidgetView: View {
         Group {
             if family == .accessoryRectangular {
                 lockScreen
-            } else if family == .systemMedium {
+            } else if family == .systemMedium && !dynamicTypeSize.isAccessibilitySize {
                 medium
             } else {
                 small
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
     }
 
     private var small: some View {
@@ -155,7 +158,6 @@ struct MealWidgetView: View {
                 if entry.snapshot != nil { expiryLabel }
             }
         }
-        .accessibilityElement(children: .combine)
     }
 
     @ViewBuilder
@@ -171,6 +173,18 @@ struct MealWidgetView: View {
 
     private var emptyMessage: String {
         entry.snapshot == nil ? "Open the app to get started." : "No upcoming meals. Plan one in the app."
+    }
+
+    private var accessibilitySummary: String {
+        guard entry.snapshot != nil else { return "Meal Prep Planner. Open the app to get started." }
+        let mealDescription: String
+        if let meal = nextMeal {
+            let time = meal.scheduledDate.formatted(date: .abbreviated, time: .shortened)
+            mealDescription = "Next meal: \(meal.name), \(time)."
+        } else {
+            mealDescription = "No upcoming meals."
+        }
+        return "\(mealDescription) \(remainingMeals.count) meals left today. \(expiringCount) ingredients to use soon."
     }
 
     private var expiryLabel: some View {

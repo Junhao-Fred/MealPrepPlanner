@@ -81,4 +81,14 @@ private struct FeaturePlaceholderView: View {
 #Preview("Empty") {
     RootTabView(repository: InMemoryMealRepository())
 }
+
+#Preview("Dark") {
+    RootTabView(repository: InMemoryMealRepository.preview())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Large Text") {
+    RootTabView(repository: InMemoryMealRepository.preview())
+        .environment(\.dynamicTypeSize, .accessibility2)
+}
 #endif
