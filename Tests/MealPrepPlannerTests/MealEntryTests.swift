@@ -165,7 +165,91 @@ struct MealEntryTests {
         #expect(model.makeDraft().scheduledDate > now)
     }
 
-    private func makeModel(_ repository: InMemoryMealRepository) -> MealPlanViewModel {
+    @Test("A suspended meal save rejects duplicate saves, loads and date changes",
+          arguments: [false, true])
+    func serializesMealSave(failFirstSave: Bool) async throws {
+        let previous = try makeDraft().makeEntry(locale: locale)
+        let base = InMemoryMealRepository(entries: [previous])
+        let repository = PausedMealSaveRepository(base: base, failFirstSave: failFirstSave)
+        let model = makeModel(repository)
+        await model.load()
+        let originalDays = model.days
+        let originalStart = model.rangeStart
+        var draft = makeDraft()
+        draft.scheduledDate = calendar.date(byAdding: .day, value: 10, to: now)!
+        let entry = try draft.makeEntry(locale: locale)
+        let saving = Task { await model.save(entry) }
+        await repository.waitForSave()
+
+        #expect(model.isSaving)
+        #expect(model.isBusy)
+        let duplicate = await model.save(entry)
+        await model.load()
+        await model.showRange(starting: draft.scheduledDate)
+        #expect(!duplicate)
+        #expect(model.days == originalDays)
+        #expect(model.rangeStart == originalStart)
+        #expect(await repository.saveAttempts == 1)
+        #expect(await repository.planReads == 1)
+        await repository.resumeSave()
+        let succeeded = await saving.value
+
+        #expect(succeeded == !failFirstSave)
+        #expect(!model.isBusy)
+        if failFirstSave {
+            #expect(model.days == originalDays)
+            #expect(model.rangeStart == originalStart)
+            #expect(model.hasLoaded)
+            #expect(model.errorMessage != nil)
+            #expect(await base.writeCount == 0)
+            let retried = await model.save(entry)
+            #expect(retried)
+        }
+        #expect(model.rangeStart == calendar.startOfDay(for: entry.scheduledDate))
+        #expect(model.days.flatMap(\.entries) == [entry])
+        #expect(model.errorMessage == nil)
+        #expect(!model.isBusy)
+        #expect(await base.writeCount == 1)
+        let stored = try await base.fetchMealPlanEntries(from: .distantPast, to: .distantFuture, includingPrepared: true)
+        #expect(Set(stored.map(\.id)) == Set([previous.id, entry.id]))
+    }
+
+    @Test("A failed post-save refresh retains only data belonging to the displayed range",
+          arguments: [false, true])
+    func refreshFailureWithExistingMeals(outsideRange: Bool) async throws {
+        let previous = try makeDraft().makeEntry(locale: locale)
+        let repository = InMemoryMealRepository(entries: [previous])
+        let model = makeModel(repository)
+        await model.load()
+        let originalDays = model.days
+        let originalStart = model.rangeStart
+        var draft = makeDraft()
+        draft.scheduledDate = outsideRange
+            ? calendar.date(byAdding: .day, value: 10, to: now)!
+            : now.addingTimeInterval(7_200)
+        let entry = try draft.makeEntry(locale: locale)
+        await repository.fail(.read, with: .readFailed)
+
+        let saved = await model.save(entry)
+
+        #expect(saved)
+        #expect(!model.isBusy)
+        #expect(model.errorMessage?.contains("Meal saved.") == true)
+        #expect(model.days == (outsideRange ? [] : originalDays))
+        #expect(model.hasLoaded == !outsideRange)
+        #expect(model.rangeStart == (outsideRange ? calendar.startOfDay(for: entry.scheduledDate) : originalStart))
+        #expect(await repository.writeCount == 1)
+
+        await repository.clearFailures()
+        await model.load()
+        #expect(model.days.flatMap(\.entries) == (outsideRange ? [entry] : [previous, entry]))
+        #expect(model.hasLoaded)
+        #expect(model.errorMessage == nil)
+        #expect(!model.isBusy)
+        #expect(await repository.writeCount == 1)
+    }
+
+    private func makeModel(_ repository: any MealPlanningRepository) -> MealPlanViewModel {
         let fixedNow = now
         return MealPlanViewModel(repository: repository, calendar: calendar, now: { fixedNow })
     }
@@ -177,5 +261,57 @@ struct MealEntryTests {
         draft.ingredients[0].quantityText = "100"
         draft.ingredients[0].unit = "g"
         return draft
+    }
+}
+
+/// Pauses only the first atomic save, so an accidental duplicate cannot hang the test.
+private actor PausedMealSaveRepository: MealPlanningRepository {
+    private let base: InMemoryMealRepository
+    private let failFirstSave: Bool
+    private var pendingSave: CheckedContinuation<Void, Never>?
+    private var saveObserver: CheckedContinuation<Void, Never>?
+    private(set) var saveAttempts = 0
+    private(set) var planReads = 0
+
+    init(base: InMemoryMealRepository, failFirstSave: Bool) {
+        self.base = base
+        self.failFirstSave = failFirstSave
+    }
+
+    func waitForSave() async {
+        guard pendingSave == nil else { return }
+        await withCheckedContinuation { saveObserver = $0 }
+    }
+
+    func resumeSave() {
+        pendingSave?.resume()
+        pendingSave = nil
+    }
+
+    func savePlannedMeal(_ entry: MealPlanEntry) async throws {
+        saveAttempts += 1
+        if saveAttempts == 1 {
+            await withCheckedContinuation { continuation in
+                pendingSave = continuation
+                saveObserver?.resume()
+                saveObserver = nil
+            }
+            if failFirstSave { throw RepositoryError.writeFailed }
+        }
+        try await base.savePlannedMeal(entry)
+    }
+
+    func fetchMealPlanEntries(from start: Date, to end: Date, includingPrepared includePrepared: Bool) async throws -> [MealPlanEntry] {
+        planReads += 1
+        return try await base.fetchMealPlanEntries(from: start, to: end, includingPrepared: includePrepared)
+    }
+    func saveMeal(_ meal: Meal) async throws { try await base.saveMeal(meal) }
+    func saveIngredient(_ ingredient: Ingredient) async throws { try await base.saveIngredient(ingredient) }
+    func saveMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.saveMealPlanEntry(entry) }
+    func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.updateMealPlanEntry(entry) }
+    func fetchUpcomingMeals() async throws -> [MealPlanEntry] { try await base.fetchUpcomingMeals() }
+    func fetchAvailableIngredients() async throws -> [Ingredient] { try await base.fetchAvailableIngredients() }
+    func fetchIngredientsExpiring(before date: Date) async throws -> [Ingredient] {
+        try await base.fetchIngredientsExpiring(before: date)
     }
 }

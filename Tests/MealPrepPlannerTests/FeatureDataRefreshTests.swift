@@ -90,6 +90,75 @@ struct FeatureDataRefreshTests {
 
     enum Feature: CaseIterable, Sendable { case plan, pantry, shopping }
 
+    @Test("Cancelling a suspended load leaves no error or busy state and a later load recovers",
+          arguments: Feature.allCases)
+    func cancelledLoadCanRetry(feature: Feature) async {
+        let meal = entry()
+        let rice = Ingredient(name: "Rice", quantity: 20, unit: "g")
+        let base = InMemoryMealRepository(entries: [meal], ingredients: [rice])
+        let gate = ReadGate()
+        let repository = PausingFeatureRepository(base: base, gate: gate, pausePantry: feature == .pantry)
+        let date = now
+        let plan = MealPlanViewModel(repository: repository, calendar: calendar, now: { date })
+        let pantry = PantryViewModel(repository: repository)
+        let shopping = ShoppingListViewModel(repository: repository, calendar: calendar, now: { date })
+        let load: @MainActor () async -> Void = {
+            switch feature {
+            case .plan: await plan.load()
+            case .pantry: await pantry.load()
+            case .shopping: await shopping.load()
+            }
+        }
+        let loading = Task { await load() }
+        await gate.waitUntilPaused()
+        switch feature {
+        case .plan: #expect(plan.isLoading)
+        case .pantry: #expect(pantry.isLoading)
+        case .shopping: #expect(shopping.isLoading)
+        }
+        loading.cancel()
+        await gate.release()
+        await loading.value
+
+        switch feature {
+        case .plan:
+            #expect(plan.days.isEmpty)
+            #expect(!plan.hasLoaded)
+            #expect(!plan.isBusy)
+            #expect(plan.errorMessage == nil)
+        case .pantry:
+            #expect(pantry.ingredients.isEmpty)
+            #expect(pantry.needsReload)
+            #expect(!pantry.isBusy)
+            #expect(pantry.errorMessage == nil)
+        case .shopping:
+            #expect(shopping.snapshot == nil)
+            #expect(!shopping.isLoading)
+            #expect(shopping.errorMessage == nil)
+        }
+
+        await load()
+        switch feature {
+        case .plan:
+            #expect(plan.days.flatMap(\.entries) == [meal])
+            #expect(plan.hasLoaded)
+            #expect(!plan.isBusy)
+            #expect(plan.errorMessage == nil)
+        case .pantry:
+            #expect(pantry.ingredients == [rice])
+            #expect(!pantry.needsReload)
+            #expect(!pantry.isBusy)
+            #expect(pantry.errorMessage == nil)
+        case .shopping:
+            #expect(shopping.snapshot?.items.first?.quantity == 80)
+            #expect(shopping.snapshot?.plannedMealCount == 1)
+            #expect(!shopping.isLoading)
+            #expect(shopping.errorMessage == nil)
+        }
+        #expect(await base.writeCount == 0)
+        #expect(await gate.readCount == 2)
+    }
+
     @Test("Changes during loading are coalesced into a fresh read", arguments: Feature.allCases)
     func changesDuringLoad(feature: Feature) async throws {
         var meal = entry()
