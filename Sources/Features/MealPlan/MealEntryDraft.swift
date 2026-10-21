@@ -6,7 +6,7 @@ enum MealEntryDraftError: Error, Equatable {
     case invalidQuantity(row: Int)
 }
 
-struct MealIngredientDraft: Identifiable {
+struct MealIngredientDraft: Identifiable, Equatable {
     let id = UUID()
     var name = ""
     var quantityText = ""
@@ -14,7 +14,7 @@ struct MealIngredientDraft: Identifiable {
 }
 
 /// Stable IDs let a failed submission retry the same plan, recipe and ingredient rows.
-struct MealEntryDraft {
+struct MealEntryDraft: Equatable {
     let id = UUID()
     let mealID = UUID()
     var name = ""

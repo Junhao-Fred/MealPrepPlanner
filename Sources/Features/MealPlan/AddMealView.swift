@@ -43,28 +43,39 @@ struct AddMealView: View {
 
                 Section {
                     ForEach($draft.ingredients) { $row in
+                        let rowNumber = ingredientNumber(for: row.id)
+                        let rowLabel = ingredientLabel(for: row, number: rowNumber)
                         VStack(alignment: .leading, spacing: 10) {
+                            Text("Ingredient \(rowNumber)")
+                                .font(.headline)
+                                .accessibilityAddTraits(.isHeader)
                             TextField("Ingredient name", text: $row.name)
                                 .focused($focusedField, equals: .ingredientName(row.id))
-                                .accessibilityLabel("Ingredient name")
+                                .submitLabel(.next)
+                                .onSubmit { focusedField = .quantity(row.id) }
+                                .accessibilityLabel("Ingredient \(rowNumber) name")
                             TextField("Quantity", text: $row.quantityText)
                                 .keyboardType(.decimalPad)
                                 .focused($focusedField, equals: .quantity(row.id))
-                                .accessibilityLabel("Ingredient quantity")
+                                .accessibilityLabel("\(rowLabel) quantity")
                             TextField("Unit, e.g. g, ml, piece", text: $row.unit)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .focused($focusedField, equals: .unit(row.id))
-                                .accessibilityLabel("Ingredient unit")
+                                .submitLabel(.done)
+                                .onSubmit { focusedField = nil }
+                                .accessibilityLabel("\(rowLabel) unit")
                             Button(role: .destructive) {
                                 focusedField = nil
                                 let id = row.id
                                 draft.ingredients.removeAll { $0.id == id }
-                                clearValidation()
                             } label: {
                                 Label("Remove Ingredient", systemImage: "trash")
+                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(.borderless)
+                            .accessibilityLabel("Remove \(rowLabel)")
                         }
                         .padding(.vertical, 4)
                     }
@@ -72,7 +83,6 @@ struct AddMealView: View {
                         let row = MealIngredientDraft()
                         draft.ingredients.append(row)
                         focusedField = .ingredientName(row.id)
-                        clearValidation()
                     } label: {
                         Label("Add Ingredient", systemImage: "plus.circle")
                     }
@@ -113,7 +123,17 @@ struct AddMealView: View {
                 }
             }
             .interactiveDismissDisabled(isSubmitting || model.isBusy)
+            .onChange(of: draft) { _, _ in clearValidation() }
         }
+    }
+
+    private func ingredientNumber(for id: UUID) -> Int {
+        (draft.ingredients.firstIndex { $0.id == id } ?? 0) + 1
+    }
+
+    private func ingredientLabel(for row: MealIngredientDraft, number: Int) -> String {
+        let name = row.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "Ingredient \(number)" : "Ingredient \(number), \(name)"
     }
 
     private func clearValidation() {
@@ -128,6 +148,9 @@ struct AddMealView: View {
             entry = try draft.makeEntry(locale: locale)
         } catch MealEntryDraftError.invalidQuantity(let row) {
             validationMessage = "Ingredient \(row) needs a positive quantity. Use '\(locale.decimalSeparator ?? ".")' for decimals, without grouping separators."
+            if draft.ingredients.indices.contains(row - 1) {
+                focusedField = .quantity(draft.ingredients[row - 1].id)
+            }
             return
         } catch {
             validationMessage = "Check the ingredient quantities."
