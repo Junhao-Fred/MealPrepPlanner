@@ -19,10 +19,11 @@ struct PlanMealUseCaseTests {
         #expect(savedEntries == [entry])
     }
 
-    @Test("Invalid plans never reach storage")
+    @Test("T16 blank names and other invalid plans never reach storage")
     func invalidPlansDoNotWrite() async {
         let repository = RecordingMealRepository()
         let useCase = PlanMealUseCase(repository: repository, now: { now })
+        // T16: a whitespace-only name must throw emptyMealName before saving.
         var emptyName = makeEntry()
         emptyName.meal.name = " \n "
         var emptyRecipe = makeEntry()

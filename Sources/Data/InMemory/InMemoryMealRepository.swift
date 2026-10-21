@@ -1,9 +1,9 @@
 //  Created by Junhao Huang on 2026/10/17.
 
+#if DEBUG
 import Foundation
-@testable import MealPrepPlanner
 
-/// Dictionary-backed repository for use case and ViewModel tests.
+/// Dictionary-backed repository for tests and SwiftUI previews. Debug builds only.
 /// Follows the `MealPlanningRepository` contract and can inject storage failures.
 actor InMemoryMealRepository: MealPlanningRepository {
     enum Operation: Sendable {
@@ -150,3 +150,4 @@ actor InMemoryMealRepository: MealPlanningRepository {
         }
     }
 }
+#endif
