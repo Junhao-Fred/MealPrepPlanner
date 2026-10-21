@@ -2,6 +2,14 @@
 
 import Foundation
 
+/// Items and plan context from the same calculation, so the UI can explain an empty list.
+struct ShoppingListSnapshot: Equatable, Sendable {
+    let items: [ShoppingListItem]
+    let plannedMealCount: Int
+    let startDate: Date
+    let endDate: Date
+}
+
 /// A positive purchase shortfall for one ingredient and unit.
 struct ShoppingListItem: Identifiable, Equatable, Sendable {
     /// Matching ignores whitespace and case; units are never converted.
