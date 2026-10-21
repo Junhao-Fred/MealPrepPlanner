@@ -61,12 +61,14 @@ struct PreviewDataTests {
     @MainActor
     func previewDependenciesStayOutOfTheAppGroup() async throws {
         let previewStore = WidgetSnapshotStore(suiteName: AppDependencies.previewSnapshotSuite)
+        UserDefaults().removePersistentDomain(forName: AppDependencies.previewSnapshotSuite)
         defer { UserDefaults().removePersistentDomain(forName: AppDependencies.previewSnapshotSuite) }
         let dependencies = AppDependencies.preview(repository: InMemoryMealRepository(now: { WidgetFixtures.now }))
-        let milk = Ingredient(name: "Milk", quantity: 1, unit: "L", expiryDate: WidgetFixtures.date(day: 1))
+        // Preview dependencies use the real clock, so the expiry must be relative to today.
+        let milk = Ingredient(name: "Milk", quantity: 1, unit: "L", expiryDate: Date().addingTimeInterval(2 * 86_400))
 
         try await dependencies.repository.saveIngredient(milk)
-        for _ in 0..<100 where previewStore.load() == nil {
+        for _ in 0..<300 where previewStore.load()?.ingredients.map(\.id) != [milk.id] {
             try await Task.sleep(for: .milliseconds(10))
         }
 
