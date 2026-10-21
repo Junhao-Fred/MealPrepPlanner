@@ -9,9 +9,14 @@ struct RootTabView: View {
         TabView(selection: $selection) {
             ForEach(AppTab.allCases) { tab in
                 NavigationStack {
-                    if tab == .today, let repository {
+                    switch (tab, repository) {
+                    case (.today, let repository?):
                         TodayView(repository: repository) { selection = .plan }
-                    } else {
+                    case (.plan, let repository?):
+                        MealPlanTab(repository: repository)
+                    case (.pantry, let repository?):
+                        PantryTab(repository: repository)
+                    default:
                         FeaturePlaceholderView(tab: tab)
                             .navigationTitle(tab.title)
                     }
@@ -58,6 +63,31 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .pantry: "Your available ingredients will appear here."
         case .shopping: "Ingredients you need to buy will appear here."
         }
+    }
+}
+
+/// Owns the view model so switching tabs keeps it instead of creating a new one on every redraw.
+private struct MealPlanTab: View {
+    @State private var model: MealPlanViewModel
+
+    init(repository: any MealPlanningRepository) {
+        _model = State(initialValue: MealPlanViewModel(repository: repository))
+    }
+
+    var body: some View {
+        MealPlanView(model: model)
+    }
+}
+
+private struct PantryTab: View {
+    @State private var model: PantryViewModel
+
+    init(repository: any MealPlanningRepository) {
+        _model = State(initialValue: PantryViewModel(repository: repository))
+    }
+
+    var body: some View {
+        PantryView(model: model)
     }
 }
 
