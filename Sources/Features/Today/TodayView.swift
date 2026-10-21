@@ -25,11 +25,13 @@ struct TodayView: View {
                         Section {
                             Text(message)
                             Button("Retry") { Task { await model.load() } }
+                                .frame(minHeight: 44)
                         }
                     }
                     Section {
                         Text(snapshot.date, format: .dateTime.weekday(.wide).month().day())
                             .font(.headline)
+                            .accessibilityAddTraits(.isHeader)
                     }
                     Section("Next Meal") {
                         if let meal = snapshot.nextMeal {
@@ -38,6 +40,7 @@ struct TodayView: View {
                             Text("No upcoming meals planned.")
                                 .foregroundStyle(.secondary)
                             Button("Open Meal Plan", action: openPlan)
+                                .frame(minHeight: 44)
                         }
                     }
                     Section("Today's Meals") {
@@ -65,7 +68,8 @@ struct TodayView: View {
                                             .foregroundStyle(.secondary)
                                     }
                                 }
-                                .accessibilityElement(children: .combine)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(ingredientAccessibilityLabel(ingredient))
                             }
                         }
                     }
@@ -78,6 +82,7 @@ struct TodayView: View {
                     Text(model.errorMessage ?? "Please try again.")
                 } actions: {
                     Button("Retry") { Task { await model.load() } }
+                        .frame(minHeight: 44)
                 }
             }
         }
@@ -105,8 +110,24 @@ struct TodayView: View {
                 if entry.scheduledDate < date {
                     Label("Past scheduled time", systemImage: "clock")
                         .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
+        .accessibilityLabel(mealAccessibilityLabel(entry, date: date))
+        .accessibilityHint("View meal details")
+    }
+
+    private func mealAccessibilityLabel(_ entry: MealPlanEntry, date: Date) -> String {
+        let time = entry.scheduledDate.formatted(date: .abbreviated, time: .shortened)
+        let status = entry.scheduledDate < date ? ", past scheduled time" : ""
+        return "\(entry.meal.name), \(entry.mealType.displayName), \(time)\(status)"
+    }
+
+    private func ingredientAccessibilityLabel(_ ingredient: Ingredient) -> String {
+        let amount = "\(ingredient.quantity.formatted()) \(ingredient.unit)"
+        guard let expiry = ingredient.expiryDate else { return "\(ingredient.name), \(amount)" }
+        let date = expiry.formatted(date: .abbreviated, time: .omitted)
+        return "\(ingredient.name), \(amount), expires \(date)"
     }
 }

@@ -138,4 +138,14 @@ private struct FeaturePlaceholderView: View {
     let dependencies = AppDependencies.preview(repository: InMemoryMealRepository())
     RootTabView(repository: dependencies.repository, changes: dependencies.changes)
 }
+
+#Preview("Dark") {
+    RootTabView(repository: InMemoryMealRepository.preview())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Large Text") {
+    RootTabView(repository: InMemoryMealRepository.preview())
+        .environment(\.dynamicTypeSize, .accessibility2)
+}
 #endif

@@ -42,7 +42,8 @@ struct MealDetailView: View {
                                     Text("\(ingredient.quantity.formatted()) \(ingredient.unit)")
                                         .foregroundStyle(.secondary)
                                 }
-                                .accessibilityElement(children: .combine)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel("\(ingredient.name), \(ingredient.quantity.formatted()) \(ingredient.unit)")
                             }
                         }
                     }
@@ -53,6 +54,7 @@ struct MealDetailView: View {
                         }
                         if entry.isPrepared {
                             Label("Prepared", systemImage: "checkmark.circle.fill")
+                                .accessibilityLabel("Meal prepared")
                         } else {
                             Button {
                                 Task {
@@ -66,6 +68,7 @@ struct MealDetailView: View {
                                 }
                             }
                             .disabled(model.isSaving || model.isLoading)
+                            .frame(minHeight: 44)
                         }
                     }
                 }
@@ -76,6 +79,7 @@ struct MealDetailView: View {
                     Text(model.errorMessage ?? "This meal could not be found.")
                 } actions: {
                     Button("Retry") { Task { await model.load() } }
+                        .frame(minHeight: 44)
                 }
             }
         }
