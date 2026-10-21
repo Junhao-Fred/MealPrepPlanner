@@ -8,7 +8,10 @@ struct ShoppingListView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: ShoppingListViewModel
 
-    init(model: ShoppingListViewModel) {
+    private let dataVersion: Int
+
+    init(model: ShoppingListViewModel, dataVersion: Int = 0) {
+        self.dataVersion = dataVersion
         _model = State(initialValue: model)
     }
 
@@ -88,7 +91,10 @@ struct ShoppingListView: View {
             }
         }
         .refreshable { await model.load() }
-        .task { await model.load() }
+        .task { await model.refreshAfterDataChange() }
+        .onChange(of: dataVersion) { _, _ in
+            Task { await model.refreshAfterDataChange() }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await model.load() } }
         }

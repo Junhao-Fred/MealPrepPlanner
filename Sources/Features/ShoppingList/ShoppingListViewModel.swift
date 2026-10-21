@@ -10,6 +10,8 @@ final class ShoppingListViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
+    @ObservationIgnored private var refreshRequested = false
+
     private let useCase: GenerateShoppingListUseCase
 
     init(
@@ -24,9 +26,19 @@ final class ShoppingListViewModel {
     func load() async {
         guard !isLoading else { return }
         isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            schedulePendingRefresh()
+        }
 
+        repeat {
+            refreshRequested = false
+            await loadSnapshot()
+        } while refreshRequested && !Task.isCancelled
+    }
+
+    private func loadSnapshot() async {
+        errorMessage = nil
         do {
             try Task.checkCancellation()
             let result = try await useCase.executeSnapshot()
@@ -49,5 +61,19 @@ final class ShoppingListViewModel {
         } catch {
             errorMessage = "Unable to calculate your shopping list. Please try again."
         }
+    }
+
+    /// Coalesces notifications while a read or write is in flight.
+    func refreshAfterDataChange() async {
+        refreshRequested = true
+        guard !isLoading else { return }
+        await load()
+    }
+
+    private func schedulePendingRefresh() {
+        guard refreshRequested, !isLoading else { return }
+        refreshRequested = false
+        // An independent task also survives cancellation of the previous view load.
+        Task { await refreshAfterDataChange() }
     }
 }
