@@ -13,11 +13,11 @@ struct AppRootView<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var state = LoadState.loading
     private let makeDependencies: @MainActor () async throws -> AppDependencies
-    private let content: () -> Content
+    private let content: (AppDependencies) -> Content
 
     init(
         makeDependencies: @escaping @MainActor () async throws -> AppDependencies = { try await AppDependencies.live() },
-        @ViewBuilder content: @escaping () -> Content
+        @ViewBuilder content: @escaping (AppDependencies) -> Content
     ) {
         self.makeDependencies = makeDependencies
         self.content = content
@@ -29,7 +29,7 @@ struct AppRootView<Content: View>: View {
             ProgressView("Opening your meal plans…")
                 .task { await load() }
         case .ready(let dependencies):
-            content()
+            content(dependencies)
                 .environment(dependencies)
                 .task { await dependencies.refreshWidgetSnapshot() }
                 .onChange(of: scenePhase) { _, phase in
@@ -59,14 +59,14 @@ struct AppRootView<Content: View>: View {
 
 #if DEBUG
 #Preview("Loaded") {
-    AppRootView(makeDependencies: { .preview() }) {
-        Text("App content")
+    AppRootView(makeDependencies: { .preview() }) { dependencies in
+        RootTabView(repository: dependencies.repository)
     }
 }
 
 #Preview("Store unavailable") {
-    AppRootView(makeDependencies: { throw RepositoryError.storeUnavailable }) {
-        Text("App content")
+    AppRootView(makeDependencies: { throw RepositoryError.storeUnavailable }) { dependencies in
+        RootTabView(repository: dependencies.repository)
     }
 }
 #endif
