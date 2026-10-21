@@ -5,9 +5,11 @@ struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: TodayViewModel
     private let repository: any MealPlanningRepository
+    private let dataVersion: Int
     let openPlan: () -> Void
 
-    init(repository: any MealPlanningRepository, openPlan: @escaping () -> Void) {
+    init(repository: any MealPlanningRepository, dataVersion: Int = 0, openPlan: @escaping () -> Void) {
+        self.dataVersion = dataVersion
         self.repository = repository
         self.openPlan = openPlan
         _model = State(initialValue: TodayViewModel(useCase: LoadTodayOverviewUseCase(repository: repository)))
@@ -85,7 +87,7 @@ struct TodayView: View {
                 await model.load()
             }
         }
-        .task { await model.load() }
+        .task(id: dataVersion) { await model.load() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await model.load() } }
         }

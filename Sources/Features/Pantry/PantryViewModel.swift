@@ -13,6 +13,8 @@ final class PantryViewModel {
     private(set) var errorMessage: String?
     private(set) var needsReload = true
 
+    @ObservationIgnored private var refreshRequested = false
+
     private let loadUseCase: LoadPantryUseCase
     private let saveUseCase: SavePantryIngredientUseCase
     private let useIngredientUseCase: MarkIngredientUsedUseCase
@@ -31,10 +33,20 @@ final class PantryViewModel {
     func load() async {
         guard !isBusy else { return }
         isLoading = true
+        defer {
+            isLoading = false
+            schedulePendingRefresh()
+        }
+
+        repeat {
+            refreshRequested = false
+            await loadSnapshot()
+        } while refreshRequested && !Task.isCancelled
+    }
+
+    private func loadSnapshot() async {
         needsReload = true
         errorMessage = nil
-        defer { isLoading = false }
-
         do {
             try Task.checkCancellation()
             let result = try await loadUseCase.execute()
@@ -53,7 +65,10 @@ final class PantryViewModel {
         guard !isBusy else { return false }
         isSaving = true
         errorMessage = nil
-        defer { isSaving = false }
+        defer {
+            isSaving = false
+            schedulePendingRefresh()
+        }
 
         do {
             try Task.checkCancellation()
@@ -75,7 +90,10 @@ final class PantryViewModel {
         guard !isBusy else { return false }
         usingIngredientID = id
         errorMessage = nil
-        defer { usingIngredientID = nil }
+        defer {
+            usingIngredientID = nil
+            schedulePendingRefresh()
+        }
 
         do {
             try Task.checkCancellation()
@@ -131,5 +149,19 @@ final class PantryViewModel {
             }
         }
         return "Unable to update your pantry. Please try again."
+    }
+
+    /// Coalesces notifications while a read or write is in flight.
+    func refreshAfterDataChange() async {
+        refreshRequested = true
+        guard !isBusy else { return }
+        await load()
+    }
+
+    private func schedulePendingRefresh() {
+        guard refreshRequested, !isBusy else { return }
+        refreshRequested = false
+        // An independent task also survives cancellation of the previous view load.
+        Task { await refreshAfterDataChange() }
     }
 }

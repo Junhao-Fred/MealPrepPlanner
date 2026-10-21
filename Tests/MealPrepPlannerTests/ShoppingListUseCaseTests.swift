@@ -196,47 +196,141 @@ struct ShoppingListUseCaseTests {
         #expect(writes == 0)
     }
 
-    @Test("Repository read failures propagate instead of appearing as an empty shopping list")
-    func propagatesReadFailures() async throws {
-        let repository = InMemoryMealRepository(entries: [makeEntry(quantity: 300)])
-        await repository.fail(.read, with: .readFailed)
+    enum ReadStage: CaseIterable, Sendable { case plans, pantry }
 
-        do {
-            _ = try await makeUseCase(repository).execute()
-            Issue.record("Expected RepositoryError.readFailed")
-        } catch let error as RepositoryError {
-            #expect(error == .readFailed)
-        } catch {
-            Issue.record("Unexpected error: \(error)")
+    @Test("Both shopping APIs preserve repository errors from either read stage",
+          arguments: ReadStage.allCases, [RepositoryError.readFailed, .storeUnavailable])
+    func propagatesReadFailures(stage: ReadStage, expectedError: RepositoryError) async throws {
+        let entry = makeEntry(quantity: 300)
+        let stock = Ingredient(name: "Rice", quantity: 100, unit: "g")
+        let base = InMemoryMealRepository(entries: [entry], ingredients: [stock])
+        let repository = ShoppingReadProbe(base: base, failureStage: stage, failureError: expectedError)
+        let useCase = makeUseCase(repository)
+
+        for snapshotAPI in [false, true] {
+            do {
+                if snapshotAPI {
+                    _ = try await useCase.executeSnapshot()
+                } else {
+                    _ = try await useCase.execute()
+                }
+                Issue.record("Expected \(expectedError) from \(stage), snapshot API: \(snapshotAPI)")
+            } catch let error as RepositoryError {
+                #expect(error == expectedError)
+            } catch {
+                Issue.record("Unexpected error: \(error)")
+            }
         }
+        #expect(await repository.planReads == 2)
+        #expect(await repository.pantryReads == (stage == .plans ? 0 : 2))
+        #expect(await base.writeCount == 0)
 
-        let writes = await repository.writeCount
-        #expect(writes == 0)
+        await repository.clearFailure()
+        let recovered = try await useCase.executeSnapshot()
+        #expect(recovered.items == [item("Rice", quantity: 200, unit: "g")])
+        #expect(recovered.plannedMealCount == 1)
+        #expect(await base.writeCount == 0)
+        #expect(try await base.fetchAvailableIngredients() == [stock])
+        #expect(try await base.fetchMealPlanEntries(from: .distantPast, to: .distantFuture, includingPrepared: true) == [entry])
     }
 
-    @Test("The window ends at local midnight across a daylight-saving transition")
-    func usesCalendarDaysAcrossDaylightSaving() async throws {
+    @Test("Seven calendar days retain exact boundaries across both daylight-saving transitions",
+          arguments: [false, true])
+    func usesCalendarDaysAcrossDaylightSaving(fallBack: Bool) async throws {
         var localCalendar = Calendar(identifier: .gregorian)
         localCalendar.timeZone = try #require(TimeZone(identifier: "Australia/Sydney"))
-        let start = try #require(localCalendar.date(from: DateComponents(year: 2026, month: 10, day: 1)))
-        let end = try #require(localCalendar.date(from: DateComponents(year: 2026, month: 10, day: 8)))
+        let month = fallBack ? 4 : 10
+        let firstDay = fallBack ? 2 : 1
+        let start = try #require(localCalendar.date(from: DateComponents(year: 2026, month: month, day: firstDay)))
+        let end = try #require(localCalendar.date(from: DateComponents(year: 2026, month: month, day: firstDay + 7)))
+        #expect(end.timeIntervalSince(start) == Double(fallBack ? 169 : 167) * 3_600)
         let repository = InMemoryMealRepository(entries: [
+            makeEntry(quantity: 4_000, date: start.addingTimeInterval(-1)),
             makeEntry(quantity: 100, date: start),
             makeEntry(quantity: 200, date: end.addingTimeInterval(-1)),
             makeEntry(quantity: 1_000, date: end),
-            makeEntry(quantity: 2_000, date: end.addingTimeInterval(30 * 60))
+            makeEntry(quantity: 2_000, date: end.addingTimeInterval(30 * 60)),
+            makeEntry(quantity: 8_000, date: start.addingTimeInterval(3_600), prepared: true)
         ])
         let fixedNow = start.addingTimeInterval(12 * 3_600)
         let useCase = GenerateShoppingListUseCase(
             repository: repository, calendar: localCalendar, now: { fixedNow }
         )
 
-        let result = try await useCase.execute()
+        let result = try await useCase.executeSnapshot()
 
-        #expect(result == [item("Rice", quantity: 300, unit: "g")])
+        #expect(result.items == [item("Rice", quantity: 300, unit: "g")])
+        #expect(result.startDate == start)
+        #expect(result.endDate == end)
+        #expect(result.plannedMealCount == 2)
+        #expect(await repository.writeCount == 0)
     }
 
-    private func makeUseCase(_ repository: InMemoryMealRepository) -> GenerateShoppingListUseCase {
+    @Test("Stock remains valid through its local expiry day and expires at the next midnight")
+    func expiryRollsOverAtLocalMidnight() async throws {
+        var localCalendar = Calendar(identifier: .gregorian)
+        localCalendar.timeZone = try #require(TimeZone(identifier: "Australia/Sydney"))
+        let start = try #require(localCalendar.date(from: DateComponents(year: 2026, month: 10, day: 4)))
+        let nextStart = try #require(localCalendar.date(from: DateComponents(year: 2026, month: 10, day: 5)))
+        // This local day has 23 hours; adding a fixed 24 hours would miss the boundary.
+        #expect(nextStart.timeIntervalSince(start) == 23 * 3_600)
+        let stock = [
+            Ingredient(name: "Rice", quantity: 1_000, unit: "g", expiryDate: start.addingTimeInterval(-1)),
+            Ingredient(name: "Rice", quantity: 40, unit: "g", expiryDate: start),
+            Ingredient(name: "Rice", quantity: 10, unit: "g", expiryDate: nextStart)
+        ]
+        let repository = InMemoryMealRepository(
+            entries: [makeEntry(quantity: 100, date: nextStart.addingTimeInterval(3_600))],
+            ingredients: stock
+        )
+        let beforeMidnight = nextStart.addingTimeInterval(-1)
+
+        let before = try await GenerateShoppingListUseCase(
+            repository: repository, calendar: localCalendar, now: { beforeMidnight }
+        ).executeSnapshot()
+        let after = try await GenerateShoppingListUseCase(
+            repository: repository, calendar: localCalendar, now: { nextStart }
+        ).executeSnapshot()
+
+        #expect(before.startDate == start)
+        #expect(after.startDate == nextStart)
+        #expect(before.plannedMealCount == 1)
+        #expect(after.plannedMealCount == 1)
+        #expect(before.items == [item("Rice", quantity: 50, unit: "g")])
+        #expect(after.items == [item("Rice", quantity: 90, unit: "g")])
+        let stored = try await repository.fetchAvailableIngredients()
+        #expect(stored.count == stock.count)
+        #expect(stock.allSatisfy { stored.contains($0) })
+        #expect(await repository.writeCount == 0)
+    }
+
+    @Test("Excluded plans are not validated or counted and do not require a pantry read")
+    func excludedPlansSkipPantryRead() async throws {
+        let end = try #require(calendar.date(byAdding: .day, value: 7, to: today))
+        // Invalid recipes would fail validation if any excluded plan leaked into demand.
+        let base = InMemoryMealRepository(entries: [
+            makeEntry(quantity: 0, date: today, prepared: true),
+            makeEntry(quantity: 0, date: end.addingTimeInterval(-1), prepared: true),
+            makeEntry(quantity: 0, date: today.addingTimeInterval(-1)),
+            makeEntry(quantity: 0, date: end)
+        ])
+        let repository = ShoppingReadProbe(base: base, failureStage: .pantry, failureError: .storeUnavailable)
+        let useCase = makeUseCase(repository)
+
+        let snapshot = try await useCase.executeSnapshot()
+        let items = try await useCase.execute()
+
+        #expect(snapshot.items.isEmpty)
+        #expect(items.isEmpty)
+        #expect(snapshot.plannedMealCount == 0)
+        #expect(snapshot.startDate == today)
+        #expect(snapshot.endDate == end)
+        #expect(await repository.planReads == 2)
+        #expect(await repository.pantryReads == 0)
+        #expect(await base.writeCount == 0)
+    }
+
+    private func makeUseCase(_ repository: any MealPlanningRepository) -> GenerateShoppingListUseCase {
         let fixedNow = today.addingTimeInterval(12 * 3_600)
         return GenerateShoppingListUseCase(repository: repository, calendar: calendar, now: { fixedNow })
     }
@@ -259,5 +353,44 @@ struct ShoppingListUseCaseTests {
 
     private func item(_ name: String, quantity: Decimal, unit: String) -> ShoppingListItem {
         ShoppingListItem(id: .init(name: name, unit: unit), name: name, quantity: quantity, unit: unit)
+    }
+}
+
+/// Observes the calculation's read stages and injects a failure at exactly one stage.
+private actor ShoppingReadProbe: MealPlanningRepository {
+    private let base: InMemoryMealRepository
+    private var failureStage: ShoppingListUseCaseTests.ReadStage?
+    private let failureError: RepositoryError
+    private(set) var planReads = 0
+    private(set) var pantryReads = 0
+
+    init(base: InMemoryMealRepository, failureStage: ShoppingListUseCaseTests.ReadStage, failureError: RepositoryError) {
+        self.base = base
+        self.failureStage = failureStage
+        self.failureError = failureError
+    }
+
+    func clearFailure() { failureStage = nil }
+
+    func fetchMealPlanEntries(from start: Date, to end: Date, includingPrepared includePrepared: Bool) async throws -> [MealPlanEntry] {
+        planReads += 1
+        if failureStage == .plans { throw failureError }
+        return try await base.fetchMealPlanEntries(from: start, to: end, includingPrepared: includePrepared)
+    }
+
+    func fetchAvailableIngredients() async throws -> [Ingredient] {
+        pantryReads += 1
+        if failureStage == .pantry { throw failureError }
+        return try await base.fetchAvailableIngredients()
+    }
+
+    func saveMeal(_ meal: Meal) async throws { try await base.saveMeal(meal) }
+    func saveIngredient(_ ingredient: Ingredient) async throws { try await base.saveIngredient(ingredient) }
+    func saveMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.saveMealPlanEntry(entry) }
+    func savePlannedMeal(_ entry: MealPlanEntry) async throws { try await base.savePlannedMeal(entry) }
+    func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.updateMealPlanEntry(entry) }
+    func fetchUpcomingMeals() async throws -> [MealPlanEntry] { try await base.fetchUpcomingMeals() }
+    func fetchIngredientsExpiring(before date: Date) async throws -> [Ingredient] {
+        try await base.fetchIngredientsExpiring(before: date)
     }
 }

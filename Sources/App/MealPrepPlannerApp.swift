@@ -7,7 +7,7 @@ struct MealPrepPlannerApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView { dependencies in
-                RootTabView(repository: dependencies.repository)
+                RootTabView(repository: dependencies.repository, changes: dependencies.changes)
             }
         }
     }

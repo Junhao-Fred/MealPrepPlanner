@@ -21,7 +21,10 @@ struct PantryView: View {
         }
     }
 
-    init(model: PantryViewModel) {
+    private let dataVersion: Int
+
+    init(model: PantryViewModel, dataVersion: Int = 0) {
+        self.dataVersion = dataVersion
         _model = State(initialValue: model)
     }
 
@@ -48,7 +51,10 @@ struct PantryView: View {
                 .disabled(model.isBusy)
             }
         }
-        .task { await model.load() }
+        .task { await model.refreshAfterDataChange() }
+        .onChange(of: dataVersion) { _, _ in
+            Task { await model.refreshAfterDataChange() }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active && presentedSheet == nil {
                 Task { await model.load() }

@@ -28,6 +28,11 @@ struct GenerateShoppingListUseCase: Sendable {
     /// Stock is valid through its expiry day; undated stock is also available.
     /// Repository failures propagate unchanged, rather than producing a partial list.
     func execute() async throws -> [ShoppingListItem] {
+        try await executeSnapshot().items
+    }
+
+    /// Includes the unfinished plan count and exact range used for this calculation.
+    func executeSnapshot() async throws -> ShoppingListSnapshot {
         let start = calendar.startOfDay(for: now())
         guard let end = calendar.date(byAdding: .day, value: 7, to: start), end > start else {
             throw ShoppingListError.invalidDateRange
@@ -56,7 +61,9 @@ struct GenerateShoppingListUseCase: Sendable {
                 demand[key] = combined
             }
         }
-        guard !demand.isEmpty else { return [] }
+        guard !demand.isEmpty else {
+            return ShoppingListSnapshot(items: [], plannedMealCount: entries.count, startDate: start, endDate: end)
+        }
 
         let ingredients = try await repository.fetchAvailableIngredients()
         var stock: [ShoppingListItem.ID: Decimal] = [:]
@@ -79,7 +86,12 @@ struct GenerateShoppingListUseCase: Sendable {
                 id: key, name: required.name, quantity: shortfall, unit: required.unit
             ))
         }
-        return result.sorted { ($0.id.name, $0.id.unit) < ($1.id.name, $1.id.unit) }
+        return ShoppingListSnapshot(
+            items: result.sorted { ($0.id.name, $0.id.unit) < ($1.id.name, $1.id.unit) },
+            plannedMealCount: entries.count,
+            startDate: start,
+            endDate: end
+        )
     }
 
     private struct Demand {

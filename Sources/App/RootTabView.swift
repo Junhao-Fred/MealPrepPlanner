@@ -4,6 +4,9 @@ import SwiftUI
 struct RootTabView: View {
     @State private var selection: AppTab = .today
     var repository: (any MealPlanningRepository)? = nil
+    var changes: DataChangeTracker? = nil
+
+    private var dataVersion: Int { changes?.version ?? 0 }
 
     var body: some View {
         TabView(selection: $selection) {
@@ -11,11 +14,13 @@ struct RootTabView: View {
                 NavigationStack {
                     switch (tab, repository) {
                     case (.today, let repository?):
-                        TodayView(repository: repository) { selection = .plan }
+                        TodayView(repository: repository, dataVersion: dataVersion) { selection = .plan }
                     case (.plan, let repository?):
-                        MealPlanTab(repository: repository)
+                        MealPlanTab(repository: repository, dataVersion: dataVersion)
                     case (.pantry, let repository?):
-                        PantryTab(repository: repository)
+                        PantryTab(repository: repository, dataVersion: dataVersion)
+                    case (.shopping, let repository?):
+                        ShoppingListTab(repository: repository, dataVersion: dataVersion)
                     default:
                         FeaturePlaceholderView(tab: tab)
                             .navigationTitle(tab.title)
@@ -70,24 +75,44 @@ enum AppTab: String, CaseIterable, Identifiable {
 private struct MealPlanTab: View {
     @State private var model: MealPlanViewModel
 
-    init(repository: any MealPlanningRepository) {
+    let dataVersion: Int
+
+    init(repository: any MealPlanningRepository, dataVersion: Int) {
+        self.dataVersion = dataVersion
         _model = State(initialValue: MealPlanViewModel(repository: repository))
     }
 
     var body: some View {
-        MealPlanView(model: model)
+        MealPlanView(model: model, dataVersion: dataVersion)
     }
 }
 
 private struct PantryTab: View {
     @State private var model: PantryViewModel
 
-    init(repository: any MealPlanningRepository) {
+    let dataVersion: Int
+
+    init(repository: any MealPlanningRepository, dataVersion: Int) {
+        self.dataVersion = dataVersion
         _model = State(initialValue: PantryViewModel(repository: repository))
     }
 
     var body: some View {
-        PantryView(model: model)
+        PantryView(model: model, dataVersion: dataVersion)
+    }
+}
+
+private struct ShoppingListTab: View {
+    @State private var model: ShoppingListViewModel
+    let dataVersion: Int
+
+    init(repository: any MealPlanningRepository, dataVersion: Int) {
+        self.dataVersion = dataVersion
+        _model = State(initialValue: ShoppingListViewModel(repository: repository))
+    }
+
+    var body: some View {
+        ShoppingListView(model: model, dataVersion: dataVersion)
     }
 }
 
@@ -105,10 +130,12 @@ private struct FeaturePlaceholderView: View {
 
 #if DEBUG
 #Preview("Today") {
-    RootTabView(repository: InMemoryMealRepository.preview())
+    let dependencies = AppDependencies.preview()
+    RootTabView(repository: dependencies.repository, changes: dependencies.changes)
 }
 
 #Preview("Empty") {
-    RootTabView(repository: InMemoryMealRepository())
+    let dependencies = AppDependencies.preview(repository: InMemoryMealRepository())
+    RootTabView(repository: dependencies.repository, changes: dependencies.changes)
 }
 #endif
