@@ -18,25 +18,38 @@ enum ExpiryReminderPlanner {
     static let limit = 60
     static let hour = 9
 
-    /// Reminds at 9:00 the day before a batch expires, or at 9:00 on the day itself once the day before has passed.
+    /// Reminds at 9:00 the day before batches expire, or at 9:00 on the day itself once the day before has passed.
+    /// Batches of the same ingredient expiring on the same day share one reminder with their combined amount.
     static func reminders(for ingredients: [Ingredient], now: Date, calendar: Calendar) -> [ExpiryReminder] {
-        let reminders = ingredients.compactMap { ingredient -> ExpiryReminder? in
-            guard ingredient.isAvailable, let expiry = ingredient.expiryDate,
-                  let expiryMorning = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: calendar.startOfDay(for: expiry)),
+        let dated = ingredients.filter { $0.isAvailable && $0.expiryDate != nil }
+        let byDay = Dictionary(grouping: dated) { ingredient in
+            ExpiryDay(
+                key: IngredientMatching.key(name: ingredient.name, unit: ingredient.unit),
+                day: calendar.startOfDay(for: ingredient.expiryDate ?? now)
+            )
+        }
+        let reminders = byDay.compactMap { expiryDay, batches -> ExpiryReminder? in
+            guard let group = PantryItemGroup.group(batches).first,
+                  let expiryMorning = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: expiryDay.day),
                   let dayBefore = calendar.date(byAdding: .day, value: -1, to: expiryMorning) else { return nil }
-            let id = identifierPrefix + ingredient.id.uuidString
-            let amount = "\(ingredient.quantity.formatted()) \(ingredient.unit)"
+            let id = "\(identifierPrefix)\(expiryDay.key.name)|\(expiryDay.key.unit)|\(Int(expiryDay.day.timeIntervalSince1970))"
+            let amount = "\(group.quantity.formatted()) \(group.unit)"
             if dayBefore > now {
-                return ExpiryReminder(id: id, title: "\(ingredient.name) expires tomorrow",
+                return ExpiryReminder(id: id, title: "\(group.name) expires tomorrow",
                                       body: "Plan a meal for the \(amount) in your pantry.", fireDate: dayBefore)
             }
             if expiryMorning > now {
-                return ExpiryReminder(id: id, title: "\(ingredient.name) expires today",
+                return ExpiryReminder(id: id, title: "\(group.name) expires today",
                                       body: "Use the \(amount) in your pantry today.", fireDate: expiryMorning)
             }
             return nil
         }
         return Array(reminders.sorted { ($0.fireDate, $0.id) < ($1.fireDate, $1.id) }.prefix(limit))
+    }
+
+    private struct ExpiryDay: Hashable {
+        let key: IngredientMatching.Key
+        let day: Date
     }
 }
 

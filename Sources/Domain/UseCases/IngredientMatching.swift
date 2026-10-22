@@ -28,6 +28,15 @@ enum IngredientMatching {
         return rounded
     }
 
+    /// Shows a total in its comparison unit, switching g to kg and ml to l from 1000.
+    static func readableAmount(_ base: Decimal, baseUnit: String) -> (quantity: Decimal, unit: String) {
+        switch baseUnit {
+        case "g" where base >= 1000: return (quantity(fromBase: base, unit: "kg"), "kg")
+        case "ml" where base >= 1000: return (quantity(fromBase: base, unit: "l"), "l")
+        default: return (quantity(fromBase: base, unit: baseUnit), baseUnit)
+        }
+    }
+
     /// True when `unit` is already its own comparison unit, so totals can be shown in it unchanged.
     static func isBaseUnit(_ unit: String) -> Bool {
         conversion(for: unit).factor == 1

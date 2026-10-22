@@ -107,11 +107,7 @@ struct GenerateShoppingListUseCase: Sendable {
         if IngredientMatching.isBaseUnit(firstUnit) {
             return (base, firstUnit)
         }
-        switch key.unit {
-        case "g" where base >= 1000: return (IngredientMatching.quantity(fromBase: base, unit: "kg"), "kg")
-        case "ml" where base >= 1000: return (IngredientMatching.quantity(fromBase: base, unit: "l"), "l")
-        default: return (IngredientMatching.quantity(fromBase: base, unit: key.unit), key.unit)
-        }
+        return IngredientMatching.readableAmount(base, baseUnit: key.unit)
     }
 
     private func adding(_ lhs: Decimal, _ rhs: Decimal) throws -> Decimal {

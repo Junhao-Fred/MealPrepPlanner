@@ -19,7 +19,11 @@ final class PantryViewModel {
     private let loadUseCase: LoadPantryUseCase
     private let saveUseCase: SavePantryIngredientUseCase
     private let useIngredientUseCase: MarkIngredientUsedUseCase
+    private let useItemUseCase: UsePantryItemUseCase
     private let deleteUseCase: DeletePantryIngredientUseCase
+
+    /// Batches of the same ingredient shown as one item with a combined total.
+    var groups: [PantryItemGroup] { PantryItemGroup.group(ingredients) }
 
     /// Views use this flag to disable conflicting actions while an operation is suspended.
     var isBusy: Bool { isLoading || isSaving || usingIngredientID != nil || deletingIngredientID != nil }
@@ -29,6 +33,7 @@ final class PantryViewModel {
         loadUseCase = LoadPantryUseCase(repository: repository)
         saveUseCase = SavePantryIngredientUseCase(repository: repository)
         useIngredientUseCase = MarkIngredientUsedUseCase(repository: repository)
+        useItemUseCase = UsePantryItemUseCase(repository: repository)
         deleteUseCase = DeletePantryIngredientUseCase(repository: repository)
     }
 
@@ -132,6 +137,65 @@ final class PantryViewModel {
             try Task.checkCancellation()
             try await deleteUseCase.execute(ingredientID: id)
             ingredients.removeAll { $0.id == id }
+        } catch is CancellationError {
+            return false
+        } catch {
+            errorMessage = message(for: error)
+            return false
+        }
+
+        await refreshAfterWrite(successMessage: "Ingredient deleted.")
+        return true
+    }
+
+    /// Deducts `quantity`, in the group's unit, across its batches soonest expiry first.
+    func use(_ group: PantryItemGroup, quantity: Decimal) async -> Bool {
+        guard !isBusy, let marker = group.batches.first?.id else { return false }
+        usingIngredientID = marker
+        errorMessage = nil
+        defer {
+            usingIngredientID = nil
+            schedulePendingRefresh()
+        }
+
+        do {
+            try Task.checkCancellation()
+            let saved = try await useItemUseCase.execute(
+                batchIDs: group.batches.map(\.id), quantity: quantity, unit: group.unit
+            )
+            // Reflect the confirmed deduction even if the subsequent full refresh fails.
+            for batch in saved {
+                ingredients.removeAll { $0.id == batch.id }
+                if batch.isAvailable { ingredients.append(batch) }
+            }
+            ingredients.sort { ($0.name, $0.id.uuidString) < ($1.name, $1.id.uuidString) }
+        } catch is CancellationError {
+            return false
+        } catch {
+            errorMessage = message(for: error)
+            return false
+        }
+
+        await refreshAfterWrite(successMessage: "Stock updated.")
+        return true
+    }
+
+    /// Removes every batch of the ingredient. Batches deleted before a failure stay deleted.
+    func deleteGroup(_ group: PantryItemGroup) async -> Bool {
+        guard !isBusy, let marker = group.batches.first?.id else { return false }
+        deletingIngredientID = marker
+        errorMessage = nil
+        defer {
+            deletingIngredientID = nil
+            schedulePendingRefresh()
+        }
+
+        do {
+            for batch in group.batches {
+                try Task.checkCancellation()
+                try await deleteUseCase.execute(ingredientID: batch.id)
+                ingredients.removeAll { $0.id == batch.id }
+            }
         } catch is CancellationError {
             return false
         } catch {

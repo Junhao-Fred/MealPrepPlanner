@@ -35,7 +35,20 @@ struct ExpiryReminderTests {
 
         #expect(reminders.map(\.title) == ["Milk expires today", "Rice expires tomorrow"])
         #expect(reminders.map(\.fireDate) == [day(23, hour: 9), day(24, hour: 9)])
-        #expect(reminders.first?.id == ExpiryReminderPlanner.identifierPrefix + tomorrow.id.uuidString)
+        #expect(reminders.first?.id.hasPrefix(ExpiryReminderPlanner.identifierPrefix) == true)
+    }
+
+    @Test("Batches of one ingredient expiring the same day share a reminder with the combined amount")
+    func combinesSameDayBatches() {
+        let tomato = Ingredient(name: "Tomato", quantity: 200, unit: "g", expiryDate: day(25))
+        let tomatoes = Ingredient(name: "Tomatoes", quantity: 300, unit: "g", expiryDate: day(25, hour: 8))
+        let laterTomato = Ingredient(name: "Tomato", quantity: 100, unit: "g", expiryDate: day(27))
+
+        let reminders = ExpiryReminderPlanner.reminders(for: [tomato, tomatoes, laterTomato], now: now, calendar: calendar)
+
+        #expect(reminders.map(\.title) == ["Tomato expires tomorrow", "Tomato expires tomorrow"])
+        #expect(reminders.first?.body == "Plan a meal for the 500 g in your pantry.")
+        #expect(Set(reminders.map(\.id)).count == 2)
     }
 
     @Test("At most 60 reminders are planned, soonest first")
