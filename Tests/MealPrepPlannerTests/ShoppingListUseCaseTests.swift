@@ -47,8 +47,8 @@ struct ShoppingListUseCaseTests {
         #expect(result == [item("Brown Rice", quantity: 350, unit: "G")])
     }
 
-    @Test("The same ingredient in different units stays separate without unit conversion")
-    func keepsDifferentUnitsSeparate() async throws {
+    @Test("Convertible units combine: 300 g + 2 kg - (100 g + 1 kg) = 1200 g; an unknown unit stays separate")
+    func convertsMatchingUnits() async throws {
         let repository = InMemoryMealRepository(
             entries: [makeEntry(ingredients: [
                 MealIngredient(name: "Rice", quantity: 300, unit: "g"),
@@ -63,8 +63,7 @@ struct ShoppingListUseCaseTests {
 
         let result = try await makeUseCase(repository).execute()
 
-        #expect(result == [item("Rice", quantity: 200, unit: "g"),
-                           item("Rice", quantity: 1, unit: "kg")])
+        #expect(result == [item("Rice", quantity: 1_200, unit: "g")])
     }
 
     @Test("Expired stock is excluded; expiry today, future expiry and undated stock remain valid")

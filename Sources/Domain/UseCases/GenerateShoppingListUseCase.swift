@@ -51,7 +51,8 @@ struct GenerateShoppingListUseCase: Sendable {
                     throw ShoppingListError.invalidIngredient
                 }
 
-                let total = try adding(demand[key]?.quantity ?? 0, ingredient.quantity)
+                let amount = IngredientMatching.baseQuantity(ingredient.quantity, unit: ingredient.unit)
+                let total = try adding(demand[key]?.quantity ?? 0, amount)
                 var combined = demand[key] ?? Demand(
                     name: displayText(ingredient.name),
                     unit: displayText(ingredient.unit),
@@ -74,7 +75,8 @@ struct GenerateShoppingListUseCase: Sendable {
             guard !ingredient.quantity.isNaN, ingredient.quantity >= 0 else {
                 throw ShoppingListError.invalidIngredient
             }
-            stock[key] = try adding(stock[key] ?? 0, ingredient.quantity)
+            let amount = IngredientMatching.baseQuantity(ingredient.quantity, unit: ingredient.unit)
+            stock[key] = try adding(stock[key] ?? 0, amount)
         }
 
         var result: [ShoppingListItem] = []
@@ -82,9 +84,8 @@ struct GenerateShoppingListUseCase: Sendable {
             // Deduct the combined stock once, after all meal requirements are summed.
             let shortfall = max(required.quantity - (stock[key] ?? 0), 0)
             guard shortfall > 0 else { continue }
-            result.append(ShoppingListItem(
-                id: key, name: required.name, quantity: shortfall, unit: required.unit
-            ))
+            let (quantity, unit) = displayAmount(shortfall, key: key, firstUnit: required.unit)
+            result.append(ShoppingListItem(id: key, name: required.name, quantity: quantity, unit: unit))
         }
         return ShoppingListSnapshot(
             items: result.sorted { ($0.id.name, $0.id.unit) < ($1.id.name, $1.id.unit) },
@@ -94,10 +95,23 @@ struct GenerateShoppingListUseCase: Sendable {
         )
     }
 
+    /// `quantity` is in the key's comparison unit; `unit` is the first recipe's unit, for display.
     private struct Demand {
         let name: String
         let unit: String
         var quantity: Decimal
+    }
+
+    /// Keeps the recipe's own unit when no conversion was needed; otherwise shows g or ml, or kg or l from 1000.
+    private func displayAmount(_ base: Decimal, key: ShoppingListItem.ID, firstUnit: String) -> (Decimal, String) {
+        if IngredientMatching.isBaseUnit(firstUnit) {
+            return (base, firstUnit)
+        }
+        switch key.unit {
+        case "g" where base >= 1000: return (IngredientMatching.quantity(fromBase: base, unit: "kg"), "kg")
+        case "ml" where base >= 1000: return (IngredientMatching.quantity(fromBase: base, unit: "l"), "l")
+        default: return (IngredientMatching.quantity(fromBase: base, unit: key.unit), key.unit)
+        }
     }
 
     private func adding(_ lhs: Decimal, _ rhs: Decimal) throws -> Decimal {
