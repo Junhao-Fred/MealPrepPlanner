@@ -40,10 +40,16 @@ struct AppRootView<Content: View>: View {
         case .ready(let dependencies):
             content(dependencies)
                 .environment(dependencies)
-                .task { await dependencies.refreshWidgetSnapshot() }
+                .task {
+                    await dependencies.refreshWidgetSnapshot()
+                    await dependencies.refreshExpiryReminders()
+                }
                 .onChange(of: scenePhase) { _, phase in
                     guard phase == .active else { return }
-                    Task { await dependencies.refreshWidgetSnapshot() }
+                    Task {
+                        await dependencies.refreshWidgetSnapshot()
+                        await dependencies.refreshExpiryReminders()
+                    }
                 }
         case .failed:
             ContentUnavailableView {
