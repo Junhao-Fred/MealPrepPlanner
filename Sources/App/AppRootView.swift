@@ -24,9 +24,18 @@ struct AppRootView<Content: View>: View {
     }
 
     var body: some View {
+        stateContent
+            .tint(Palette.sage)
+    }
+
+    @ViewBuilder
+    private var stateContent: some View {
         switch state {
         case .loading:
             ProgressView("Opening your meal plans…")
+                .font(.rounded(.body))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .plannerCanvas()
                 .task { await load() }
         case .ready(let dependencies):
             content(dependencies)
@@ -43,8 +52,9 @@ struct AppRootView<Content: View>: View {
                 Text("MealPrep Planner couldn't open its database. Try again, and restart the app if this keeps happening.")
             } actions: {
                 Button("Try Again") { state = .loading }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(PillButtonStyle(systemImage: "arrow.clockwise"))
             }
+            .plannerCanvas()
         }
     }
 
