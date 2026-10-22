@@ -43,10 +43,7 @@ struct ShoppingListView: View {
                             if snapshot.plannedMealCount == 0 {
                                 ContentUnavailableView("No Meals to Shop For", systemImage: "calendar")
                             } else {
-                                ContentUnavailableView(
-                                    "Nothing to Buy", systemImage: "checkmark.circle",
-                                    description: Text("Your pantry covers the ingredients needed for these meals.")
-                                )
+                                ContentUnavailableView("Nothing to Buy", systemImage: "checkmark.circle")
                             }
                         }
                         .bezelCard(padding: 20)
