@@ -197,6 +197,7 @@ private actor HoldFirstUpcomingReadRepository: MealPlanningRepository {
     func savePlannedMeal(_ entry: MealPlanEntry) async throws { try await base.savePlannedMeal(entry) }
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.updateMealPlanEntry(entry) }
     func deleteIngredient(id: UUID) async throws { try await base.deleteIngredient(id: id) }
+    func deleteMealPlanEntry(id: UUID) async throws { try await base.deleteMealPlanEntry(id: id) }
 
     func fetchMealPlanEntries(
         from start: Date,

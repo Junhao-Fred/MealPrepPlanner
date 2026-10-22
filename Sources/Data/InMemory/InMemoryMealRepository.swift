@@ -90,6 +90,15 @@ actor InMemoryMealRepository: MealPlanningRepository {
         writeCount += 1
     }
 
+    func deleteMealPlanEntry(id: UUID) async throws {
+        try check(.write)
+        guard let entry = entries.removeValue(forKey: id) else { throw RepositoryError.notFound }
+        if !entries.values.contains(where: { $0.meal.id == entry.meal.id }) {
+            meals[entry.meal.id] = nil
+        }
+        writeCount += 1
+    }
+
     // MARK: Reads
 
     func fetchUpcomingMeals() async throws -> [MealPlanEntry] {

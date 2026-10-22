@@ -284,4 +284,5 @@ private actor ControlledPantryRepository: MealPlanningRepository {
     }
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.updateMealPlanEntry(entry) }
     func deleteIngredient(id: UUID) async throws { try await base.deleteIngredient(id: id) }
+    func deleteMealPlanEntry(id: UUID) async throws { try await base.deleteMealPlanEntry(id: id) }
 }

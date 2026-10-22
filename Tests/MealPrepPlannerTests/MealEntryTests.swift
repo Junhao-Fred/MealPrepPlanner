@@ -310,6 +310,7 @@ private actor PausedMealSaveRepository: MealPlanningRepository {
     func saveMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.saveMealPlanEntry(entry) }
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.updateMealPlanEntry(entry) }
     func deleteIngredient(id: UUID) async throws { try await base.deleteIngredient(id: id) }
+    func deleteMealPlanEntry(id: UUID) async throws { try await base.deleteMealPlanEntry(id: id) }
     func fetchUpcomingMeals() async throws -> [MealPlanEntry] { try await base.fetchUpcomingMeals() }
     func fetchAvailableIngredients() async throws -> [Ingredient] { try await base.fetchAvailableIngredients() }
     func fetchIngredientsExpiring(before date: Date) async throws -> [Ingredient] {

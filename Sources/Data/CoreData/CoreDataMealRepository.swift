@@ -67,6 +67,21 @@ actor CoreDataMealRepository: MealPlanningRepository {
         }
     }
 
+    func deleteMealPlanEntry(id: UUID) async throws {
+        try await write { context in
+            guard let entity = try Self.existing(MealPlanEntryEntity.self, id: id, in: context) else {
+                throw RepositoryError.notFound
+            }
+            let meal = entity.meal
+            context.delete(entity)
+            // Apply the nullify rule now so the recipe's deny rule sees the remaining entries.
+            context.processPendingChanges()
+            if let meal, meal.planEntries?.count ?? 0 == 0 {
+                context.delete(meal)
+            }
+        }
+    }
+
     // MARK: Reads
 
     func fetchUpcomingMeals() async throws -> [MealPlanEntry] {

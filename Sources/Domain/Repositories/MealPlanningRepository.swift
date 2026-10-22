@@ -35,4 +35,8 @@ protocol MealPlanningRepository: Sendable {
 
     /// Removes a pantry batch; throws `RepositoryError.notFound` if its ID is missing.
     func deleteIngredient(id: UUID) async throws
+
+    /// Removes an entry, and its recipe once no other entry uses it.
+    /// Throws `RepositoryError.notFound` if the ID is missing.
+    func deleteMealPlanEntry(id: UUID) async throws
 }
