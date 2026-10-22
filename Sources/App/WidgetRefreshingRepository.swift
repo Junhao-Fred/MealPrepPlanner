@@ -43,6 +43,11 @@ struct WidgetRefreshingRepository: MealPlanningRepository {
         await didWrite()
     }
 
+    func deleteIngredient(id: UUID) async throws {
+        try await base.deleteIngredient(id: id)
+        await didWrite()
+    }
+
     // MARK: Reads
 
     func fetchUpcomingMeals() async throws -> [MealPlanEntry] {

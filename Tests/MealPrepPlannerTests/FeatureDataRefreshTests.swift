@@ -245,6 +245,7 @@ private struct PausingFeatureRepository: MealPlanningRepository {
     func saveMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.saveMealPlanEntry(entry) }
     func savePlannedMeal(_ entry: MealPlanEntry) async throws { try await base.savePlannedMeal(entry) }
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.updateMealPlanEntry(entry) }
+    func deleteIngredient(id: UUID) async throws { try await base.deleteIngredient(id: id) }
     func fetchUpcomingMeals() async throws -> [MealPlanEntry] { try await base.fetchUpcomingMeals() }
     func fetchIngredientsExpiring(before date: Date) async throws -> [Ingredient] {
         try await base.fetchIngredientsExpiring(before: date)

@@ -283,4 +283,5 @@ private actor ControlledPantryRepository: MealPlanningRepository {
         try await base.fetchIngredientsExpiring(before: date)
     }
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { try await base.updateMealPlanEntry(entry) }
+    func deleteIngredient(id: UUID) async throws { try await base.deleteIngredient(id: id) }
 }

@@ -84,6 +84,23 @@ struct InMemoryMealRepositoryTests {
         #expect(writeCount == 0)
     }
 
+    @Test("Deleting an ingredient removes that batch; a missing ID throws notFound")
+    func deletesIngredient() async throws {
+        let rice = Ingredient(name: "Rice", quantity: 1, unit: "kg")
+        let salt = Ingredient(name: "Salt", quantity: 500, unit: "g")
+        let repository = makeRepository(ingredients: [rice, salt])
+
+        try await repository.deleteIngredient(id: rice.id)
+        await #expect(throws: RepositoryError.notFound) {
+            try await repository.deleteIngredient(id: rice.id)
+        }
+
+        let available = try await repository.fetchAvailableIngredients()
+        let writeCount = await repository.writeCount
+        #expect(available == [salt])
+        #expect(writeCount == 1)
+    }
+
     @Test("Injected failures surface as RepositoryError and a failed write stores nothing")
     func injectedFailures() async throws {
         let repository = makeRepository()
