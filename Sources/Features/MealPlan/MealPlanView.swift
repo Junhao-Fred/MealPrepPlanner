@@ -43,11 +43,7 @@ struct MealPlanView: View {
                 Group {
                     if model.hasLoaded {
                         VStack(spacing: 4) {
-                            ContentUnavailableView(
-                                "No Meals Planned",
-                                systemImage: "calendar",
-                                description: Text("There are no meals in this date range. Choose another starting date to browse your plans.")
-                            )
+                            ContentUnavailableView("No Meals Planned", systemImage: "calendar")
                             Button("Add Meal", action: addMeal)
                                 .buttonStyle(PillButtonStyle(systemImage: "plus"))
                                 .disabled(model.isBusy)
