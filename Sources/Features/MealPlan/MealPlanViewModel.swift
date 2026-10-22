@@ -35,7 +35,7 @@ final class MealPlanViewModel {
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         useCase = GetMealPlanUseCase(repository: repository)
-        saveUseCase = PlanMealUseCase(repository: repository, now: now)
+        saveUseCase = PlanMealUseCase(repository: repository, calendar: calendar, now: now)
         deleteUseCase = DeleteMealPlanEntryUseCase(repository: repository)
         self.calendar = calendar
         self.now = now
@@ -126,7 +126,7 @@ final class MealPlanViewModel {
             case .emptyMealName: errorMessage = "Enter a meal name."
             case .emptyIngredients: errorMessage = "Add at least one ingredient."
             case .invalidIngredient: errorMessage = "Each ingredient needs a name, a positive quantity and a unit."
-            case .scheduledInThePast: errorMessage = "Choose a future date and time."
+            case .scheduledInThePast: errorMessage = "Choose today or a later date."
             }
             return false
         } catch {

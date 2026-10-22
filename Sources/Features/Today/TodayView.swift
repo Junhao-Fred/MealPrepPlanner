@@ -36,6 +36,9 @@ struct TodayView: View {
                         summaryTiles(snapshot)
                             .revealOnScroll()
                         todaysMeals(snapshot)
+                        if !snapshot.missedMeals.isEmpty {
+                            missedMeals(snapshot)
+                        }
                         useSoon(snapshot)
                     }
                     .padding(.horizontal, 20)
@@ -192,6 +195,19 @@ struct TodayView: View {
         }
     }
 
+    private func missedMeals(_ snapshot: TodayOverview) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeading(eyebrow: "Past 7 days", title: "Not Marked Prepared", systemImage: "clock.badge.exclamationmark", tint: Palette.amber)
+            Text("Mark these as prepared to update your pantry, or delete the ones you skipped.")
+                .font(.rounded(.subheadline))
+                .foregroundStyle(.secondary)
+            ForEach(snapshot.missedMeals) { meal in
+                mealLink(meal, date: snapshot.date, showsDay: true)
+                    .revealOnScroll()
+            }
+        }
+    }
+
     private func useSoon(_ snapshot: TodayOverview) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeading(eyebrow: "Next 3 days", title: "Use Soon", systemImage: "hourglass", tint: Palette.amber)
@@ -228,7 +244,7 @@ struct TodayView: View {
         }
     }
 
-    private func mealLink(_ entry: MealPlanEntry, date: Date) -> some View {
+    private func mealLink(_ entry: MealPlanEntry, date: Date, showsDay: Bool = false) -> some View {
         NavigationLink(value: MealDetailsRoute(id: entry.id)) {
             HStack(spacing: 14) {
                 MealTypeIcon(type: entry.mealType)
@@ -236,7 +252,7 @@ struct TodayView: View {
                     Text(entry.meal.name)
                         .font(.rounded(.headline, weight: .semibold))
                         .foregroundStyle(.primary)
-                    Text("\(entry.mealType.displayName) · \(entry.scheduledDate.formatted(date: .omitted, time: .shortened))")
+                    Text("\(entry.mealType.displayName) · \(showsDay ? entry.scheduledDate.formatted(.dateTime.weekday(.abbreviated).day().month().hour().minute()) : entry.scheduledDate.formatted(date: .omitted, time: .shortened))")
                         .font(.rounded(.subheadline))
                         .foregroundStyle(.secondary)
                     if entry.scheduledDate < date {

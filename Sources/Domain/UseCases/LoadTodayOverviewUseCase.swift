@@ -9,6 +9,8 @@ struct TodayOverview: Equatable, Sendable {
     let meals: [MealPlanEntry]
     let nextMeal: MealPlanEntry?
     let expiringIngredients: [Ingredient]
+    /// Unprepared meals from the previous week, so they don't silently drop out of view.
+    var missedMeals: [MealPlanEntry] = []
 }
 
 struct LoadTodayOverviewUseCase: Sendable {
@@ -19,7 +21,8 @@ struct LoadTodayOverviewUseCase: Sendable {
     func execute() async throws -> TodayOverview {
         let date = now()
         let start = calendar.startOfDay(for: date)
-        guard let end = calendar.date(byAdding: .day, value: 1, to: start) else {
+        guard let end = calendar.date(byAdding: .day, value: 1, to: start),
+              let weekAgo = calendar.date(byAdding: .day, value: -7, to: start) else {
             throw TodayOverviewError.invalidDate
         }
         let meals = try await repository.fetchMealPlanEntries(
@@ -31,6 +34,12 @@ struct LoadTodayOverviewUseCase: Sendable {
         let ingredients = try await FindIngredientsToUseSoonUseCase(
             repository: repository, calendar: calendar, now: { date }
         ).execute()
-        return TodayOverview(date: date, meals: meals, nextMeal: upcoming.first, expiringIngredients: ingredients)
+        let missed = try await repository.fetchMealPlanEntries(
+            from: weekAgo, to: start, includingPrepared: false
+        )
+        return TodayOverview(
+            date: date, meals: meals, nextMeal: upcoming.first,
+            expiringIngredients: ingredients, missedMeals: missed
+        )
     }
 }

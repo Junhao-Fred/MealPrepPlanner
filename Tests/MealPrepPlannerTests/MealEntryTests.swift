@@ -102,7 +102,7 @@ struct MealEntryTests {
         var emptyUnit = entry
         emptyUnit.meal.ingredients[0].unit = ""
         var past = entry
-        past.scheduledDate = now.addingTimeInterval(-1)
+        past.scheduledDate = calendar.startOfDay(for: now).addingTimeInterval(-1)
 
         for invalid in [blankName, emptyRecipe, emptyUnit, past] {
             let saved = await model.save(invalid)
