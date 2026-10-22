@@ -32,6 +32,7 @@ struct RootTabView: View {
                 .tag(tab)
             }
         }
+        .tint(Palette.sage)
     }
 }
 

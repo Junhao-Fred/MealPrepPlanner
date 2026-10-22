@@ -36,6 +36,7 @@ struct PantryView: View {
                 stockList
             }
         }
+        .plannerCanvas()
         .navigationTitle("Pantry")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -100,6 +101,7 @@ struct PantryView: View {
                 Text("Your ingredients will appear here once added. Used-up batches are hidden.")
             } actions: {
                 Button("Add Ingredient", action: addIngredient)
+                    .buttonStyle(PillButtonStyle(systemImage: "plus"))
                     .disabled(model.isBusy)
                 Button("Refresh") { Task { await model.load() } }
                     .disabled(model.isBusy)
@@ -108,53 +110,81 @@ struct PantryView: View {
     }
 
     private var stockList: some View {
-        List {
-            if let message = model.errorMessage {
-                Section {
-                    Label(message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.secondary)
-                    Button("Retry Refresh") { Task { await model.load() } }
-                        .disabled(model.isBusy)
-                }
-            } else if model.needsReload && !model.isLoading {
-                Section {
-                    Text("Refresh the pantry before using stock.")
-                    Button("Refresh") { Task { await model.load() } }
-                        .disabled(model.isBusy)
-                }
-            }
-
-            if model.isLoading {
-                ProgressView("Refreshing pantry…")
-            }
-
-            Section("Available Stock") {
-                ForEach(model.ingredients) { ingredient in
-                    VStack(alignment: .leading, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(ingredient.name)
-                                .font(.headline)
-                            Text("\(ingredient.quantity.formatted()) \(ingredient.unit)")
-                            expiryLabel(for: ingredient)
-                                .font(.subheadline)
-                        }
-                        .accessibilityElement(children: .combine)
-
-                        Button {
-                            model.clearError()
-                            presentedSheet = .use(ingredient)
-                        } label: {
-                            Label("Use Ingredient", systemImage: "minus.circle")
-                        }
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel("Use \(ingredient.name)")
-                        .disabled(model.isBusy || model.needsReload)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                if let message = model.errorMessage {
+                    ErrorCard(message: message, retryTitle: "Retry Refresh", retryDisabled: model.isBusy) {
+                        Task { await model.load() }
                     }
-                    .padding(.vertical, 4)
+                } else if model.needsReload && !model.isLoading {
+                    ErrorCard(message: "Refresh the pantry before using stock.", retryTitle: "Refresh", retryDisabled: model.isBusy) {
+                        Task { await model.load() }
+                    }
+                }
+
+                if model.isLoading {
+                    ProgressView("Refreshing pantry…")
+                        .font(.rounded(.subheadline))
+                        .frame(maxWidth: .infinity)
+                }
+
+                SectionHeading(
+                    eyebrow: "\(model.ingredients.count) in stock",
+                    title: "Available Stock",
+                    systemImage: "shippingbox"
+                )
+
+                ForEach(model.ingredients) { ingredient in
+                    ingredientCard(ingredient)
+                        .revealOnScroll()
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
+            .padding(.bottom, 40)
+            .animation(Theme.spring, value: model.ingredients)
         }
         .refreshable { await model.load() }
+    }
+
+    private func ingredientCard(_ ingredient: Ingredient) -> some View {
+        let soon = ExpiryRules.isExpiringSoon(ingredient.expiryDate, now: Date())
+        let expired = ExpiryRules.isExpired(ingredient.expiryDate, now: Date())
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 14) {
+                if let expiry = ingredient.expiryDate {
+                    FreshnessRing(expiry: expiry, now: Date())
+                } else {
+                    IconTile(
+                        systemImage: "leaf.fill",
+                        tint: soon || expired ? Palette.amber : Palette.sage,
+                        background: soon || expired ? Palette.amberSoft : Palette.sageSoft
+                    )
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(ingredient.name)
+                        .font(.rounded(.headline, weight: .semibold))
+                    Text("\(ingredient.quantity.formatted()) \(ingredient.unit)")
+                        .font(.rounded(.title2, weight: .bold))
+                        .contentTransition(.numericText())
+                    expiryLabel(for: ingredient)
+                        .padding(.top, 2)
+                }
+                .accessibilityElement(children: .combine)
+                Spacer(minLength: 0)
+            }
+
+            Button {
+                model.clearError()
+                presentedSheet = .use(ingredient)
+            } label: {
+                Text("Use Ingredient")
+            }
+            .buttonStyle(PillButtonStyle(systemImage: "minus", prominent: false))
+            .accessibilityLabel("Use \(ingredient.name)")
+            .disabled(model.isBusy || model.needsReload)
+        }
+        .bezelCard(padding: 16)
     }
 
     private func addIngredient() {
@@ -166,21 +196,18 @@ struct PantryView: View {
     @ViewBuilder
     private func expiryLabel(for ingredient: Ingredient) -> some View {
         if let expiry = ingredient.expiryDate {
-            let today = Calendar.current.startOfDay(for: Date())
-            if expiry < today {
-                Label("Expired \(expiry.formatted(date: .abbreviated, time: .omitted))",
-                      systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.red)
-            } else if Calendar.current.isDate(expiry, inSameDayAs: today) {
-                Label("Expires today", systemImage: "clock")
-                    .foregroundStyle(.orange)
+            let date = expiry.formatted(date: .abbreviated, time: .omitted)
+            if ExpiryRules.isExpired(expiry, now: Date()) {
+                StatusBadge(text: "Expired \(date)", systemImage: "exclamationmark.triangle.fill", tint: .red)
+            } else if Calendar.current.isDateInToday(expiry) {
+                StatusBadge(text: "Expires today", systemImage: "clock.fill", tint: Palette.amber)
+            } else if ExpiryRules.isExpiringSoon(expiry, now: Date()) {
+                StatusBadge(text: "Use soon · \(date)", systemImage: "hourglass", tint: Palette.amber)
             } else {
-                Text("Expires \(expiry.formatted(date: .abbreviated, time: .omitted))")
-                    .foregroundStyle(.secondary)
+                StatusBadge(text: "Expires \(date)", systemImage: "calendar")
             }
         } else {
-            Text("No expiry date")
-                .foregroundStyle(.secondary)
+            StatusBadge(text: "No expiry date", systemImage: "infinity")
         }
     }
 }
@@ -232,6 +259,7 @@ private struct PantryUsageSheet: View {
                     Text("Enter the amount actually used. Stock changes only after you confirm.")
                 }
             }
+            .plannerCanvas()
             .navigationTitle("Use Ingredient")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

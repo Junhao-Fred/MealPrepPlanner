@@ -16,69 +16,58 @@ struct ShoppingListView: View {
     }
 
     var body: some View {
-        List {
-            if let snapshot = model.snapshot {
-                Section {
-                    Text("\(snapshot.startDate.formatted(date: .abbreviated, time: .omitted)) – \(snapshot.endDate.addingTimeInterval(-1).formatted(date: .abbreviated, time: .omitted))")
-                        .font(.headline)
-                    Text("Unfinished meals: \(snapshot.plannedMealCount)")
-                        .foregroundStyle(.secondary)
-                } footer: {
-                    Text("Required ingredients minus valid pantry stock. Different units are listed separately.")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                if let snapshot = model.snapshot {
+                    rangeCard(snapshot)
+                        .revealOnScroll()
                 }
-            }
 
-            if model.isLoading {
-                Section {
+                if model.isLoading {
                     ProgressView(model.snapshot == nil ? "Loading shopping list…" : "Refreshing shopping list…")
+                        .font(.rounded(.subheadline))
+                        .frame(maxWidth: .infinity)
                 }
-            }
 
-            if let message = model.errorMessage {
-                Section {
-                    Label(message, systemImage: "exclamationmark.triangle")
-                    if model.snapshot != nil {
-                        Text("Showing the last loaded result. It may be out of date.")
-                            .foregroundStyle(.secondary)
-                    }
-                    Button("Retry") { Task { await model.load() } }
-                        .disabled(model.isLoading)
+                if let message = model.errorMessage {
+                    ErrorCard(
+                        message: message,
+                        detail: model.snapshot != nil ? "Showing the last loaded result. It may be out of date." : nil,
+                        retryDisabled: model.isLoading
+                    ) { Task { await model.load() } }
                 }
-            }
 
-            if let snapshot = model.snapshot {
-                if snapshot.items.isEmpty {
-                    Section {
-                        if snapshot.plannedMealCount == 0 {
-                            ContentUnavailableView(
-                                "No Meals to Shop For", systemImage: "calendar",
-                                description: Text("There are no unfinished meals in this seven-day range. Add meals in Meal Plan to calculate what to buy.")
-                            )
-                        } else {
-                            ContentUnavailableView(
-                                "Nothing to Buy", systemImage: "checkmark.circle",
-                                description: Text("Your pantry covers the ingredients needed for these meals.")
-                            )
-                        }
-                    }
-                } else {
-                    Section("To Buy") {
-                        ForEach(snapshot.items) { item in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.name)
-                                    .font(.headline)
-                                Text("\(item.quantity.formatted()) \(item.unit)")
-                                    .foregroundStyle(.secondary)
+                if let snapshot = model.snapshot {
+                    if snapshot.items.isEmpty {
+                        Group {
+                            if snapshot.plannedMealCount == 0 {
+                                ContentUnavailableView(
+                                    "No Meals to Shop For", systemImage: "calendar",
+                                    description: Text("There are no unfinished meals in this seven-day range. Add meals in Meal Plan to calculate what to buy.")
+                                )
+                            } else {
+                                ContentUnavailableView(
+                                    "Nothing to Buy", systemImage: "checkmark.circle",
+                                    description: Text("Your pantry covers the ingredients needed for these meals.")
+                                )
                             }
-                            .padding(.vertical, 4)
-                            .accessibilityElement(children: .combine)
                         }
+                        .bezelCard(padding: 20)
+                    } else {
+                        itemsCard(snapshot.items)
+                            .revealOnScroll()
                     }
+                } else if !model.isLoading && model.errorMessage == nil {
+                    Button("Load Shopping List") { Task { await model.load() } }
+                        .buttonStyle(PillButtonStyle(systemImage: "arrow.clockwise"))
                 }
-            } else if !model.isLoading && model.errorMessage == nil {
-                Button("Load Shopping List") { Task { await model.load() } }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
+            .padding(.bottom, 40)
+            .animation(Theme.spring, value: model.snapshot?.items)
         }
+        .plannerCanvas()
         .navigationTitle("Shopping List")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -97,6 +86,48 @@ struct ShoppingListView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await model.load() } }
+        }
+    }
+
+    private func rangeCard(_ snapshot: ShoppingListSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Eyebrow(text: "This week", systemImage: "cart", tint: Palette.onSage)
+            Text("\(snapshot.startDate.formatted(date: .abbreviated, time: .omitted)) – \(snapshot.endDate.addingTimeInterval(-1).formatted(date: .abbreviated, time: .omitted))")
+                .font(.rounded(.title2, weight: .bold))
+            Text("Unfinished meals: \(snapshot.plannedMealCount)")
+                .font(.rounded(.headline, weight: .medium))
+                .opacity(0.85)
+            Text("Required ingredients minus valid pantry stock. Different units are listed separately.")
+                .font(.rounded(.footnote))
+                .opacity(0.8)
+        }
+        .foregroundStyle(Palette.onSage)
+        .bezelCard(
+            LinearGradient(colors: [Palette.sage, Palette.sageDeep], startPoint: .topLeading, endPoint: .bottomTrailing),
+            padding: 22
+        )
+    }
+
+    private func itemsCard(_ items: [ShoppingListItem]) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeading(eyebrow: "\(items.count) to buy", title: "To Buy", systemImage: "bag")
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    if index > 0 { Divider().overlay(Palette.hairline) }
+                    HStack(spacing: 14) {
+                        IconTile(systemImage: "cart.fill")
+                        Text(item.name)
+                            .font(.rounded(.headline, weight: .semibold))
+                        Spacer(minLength: 12)
+                        Text("\(item.quantity.formatted()) \(item.unit)")
+                            .font(.rounded(.title3, weight: .bold))
+                            .foregroundStyle(Palette.sage)
+                    }
+                    .padding(.vertical, 10)
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            .bezelCard(padding: 16)
         }
     }
 }

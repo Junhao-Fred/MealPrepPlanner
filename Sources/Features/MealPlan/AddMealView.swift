@@ -104,6 +104,7 @@ struct AddMealView: View {
             .navigationTitle("Add Meal")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
+            .plannerCanvas()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

@@ -68,6 +68,7 @@ struct AddIngredientView: View {
             .navigationTitle("Add Ingredient")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
+            .plannerCanvas()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

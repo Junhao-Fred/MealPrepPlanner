@@ -4,6 +4,10 @@ import SwiftUI
 
 @main
 struct MealPrepPlannerApp: App {
+    init() {
+        Theme.configureAppearance()
+    }
+
     var body: some Scene {
         WindowGroup {
             AppRootView { dependencies in
