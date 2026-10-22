@@ -12,7 +12,7 @@ struct MealPrepPlannerWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: AppGroupConfiguration.widgetKind, provider: SnapshotTimelineProvider()) { entry in
             MealWidgetView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(for: .widget) { WidgetCanvas() }
         }
         .configurationDisplayName("Meal Prep Planner")
         .description("Your next meal, today's plans and ingredients to use soon.")
@@ -58,11 +58,32 @@ struct SnapshotTimelineProvider: TimelineProvider {
     }
 }
 
+/// Cream canvas with a sage glow on the Home Screen. Lock Screen widgets keep the system background.
+struct WidgetCanvas: View {
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        if family == .accessoryRectangular {
+            Color.clear
+        } else {
+            ZStack {
+                Palette.canvas
+                RadialGradient(
+                    colors: [Palette.sage.opacity(0.18), .clear],
+                    center: .topTrailing, startRadius: 0, endRadius: 220
+                )
+            }
+        }
+    }
+}
+
 struct MealWidgetView: View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.calendar) private var calendar
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let entry: SnapshotEntry
+
+    /// A live countdown reads well for the next few hours; further out, show the time instead.
+    private static let countdownWindow: TimeInterval = 12 * 3_600
 
     private var nextMeal: MealWidgetSnapshot.Meal? {
         entry.snapshot?.nextMeal(at: entry.date)
@@ -80,117 +101,148 @@ struct MealWidgetView: View {
         Group {
             if family == .accessoryRectangular {
                 lockScreen
-            } else if family == .systemMedium && !dynamicTypeSize.isAccessibilitySize {
+            } else if family == .systemMedium {
                 medium
             } else {
                 small
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilitySummary)
     }
 
+    // MARK: Home Screen
+
     private var small: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("Next Meal", systemImage: "fork.knife")
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 4) {
+            heading
             nextMealContent
             Spacer(minLength: 0)
-            if entry.snapshot != nil { expiryLabel }
+            if entry.snapshot != nil { expiryChip }
         }
     }
 
     private var medium: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label("Next Meal", systemImage: "fork.knife")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-                    nextMealContent
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                if entry.snapshot != nil {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Today · \(remainingMeals.count) left")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-                        if remainingMeals.isEmpty {
-                            Text("No meals left today")
-                                .font(.caption)
-                        } else {
-                            ForEach(remainingMeals.prefix(2)) { meal in
-                                HStack(alignment: .firstTextBaseline) {
-                                    Text(meal.name).lineLimit(1)
-                                    Spacer(minLength: 4)
-                                    Text(meal.scheduledDate, style: .time)
-                                }
-                                .font(.caption)
-                                .accessibilityElement(children: .combine)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
+        HStack(alignment: .center, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                heading
+                nextMealContent
+                Spacer(minLength: 0)
+                if entry.snapshot != nil { expiryChip }
             }
-            Spacer(minLength: 0)
-            if entry.snapshot != nil { expiryLabel }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if entry.snapshot != nil {
+                DayRing(
+                    now: entry.date,
+                    mealTimes: remainingMeals.map(\.scheduledDate),
+                    count: remainingMeals.count,
+                    label: "left today",
+                    fixedDiameter: 92
+                )
+                .accessibilityLabel(remainingAccessibilityLabel)
+            }
         }
     }
 
-    private var lockScreen: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Label("Next Meal", systemImage: "fork.knife")
-                .font(.caption.bold())
-            if let meal = nextMeal {
-                Text(meal.name).font(.headline).lineLimit(1)
-                HStack {
-                    mealTime(meal.scheduledDate)
-                    Spacer(minLength: 4)
-                    Label("\(expiringCount)", systemImage: "clock")
-                        .accessibilityLabel("\(expiringCount) ingredients to use soon")
-                }
-                .font(.caption2)
-            } else {
-                Text(emptyMessage).font(.caption).lineLimit(2)
-                if entry.snapshot != nil { expiryLabel }
+    private var heading: some View {
+        HStack(spacing: 6) {
+            if nextMeal != nil {
+                LiveDot()
             }
+            Text("NEXT MEAL")
+                .font(.rounded(.caption2, weight: .bold))
+                .tracking(1.2)
+                .foregroundStyle(Palette.sage)
         }
+        .accessibilityHidden(true)
     }
 
     @ViewBuilder
     private var nextMealContent: some View {
         if let meal = nextMeal {
-            Text(meal.name).font(.headline).lineLimit(2)
-            Text(meal.mealType).font(.caption).foregroundStyle(.secondary)
-            mealTime(meal.scheduledDate).font(.caption)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(meal.name)
+                    .font(.rounded(.headline, weight: .bold))
+                    .lineLimit(2)
+                Text(meal.mealType)
+                    .font(.rounded(.caption, weight: .medium))
+                    .foregroundStyle(.secondary)
+                countdown(to: meal.scheduledDate)
+                    .font(.rounded(.title3, weight: .bold))
+                    .foregroundStyle(Palette.sage)
+                    .monospacedDigit()
+                    .padding(.top, 2)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Next meal: \(meal.name), \(meal.mealType)")
         } else {
-            Text(emptyMessage).font(.subheadline)
+            Text(emptyMessage)
+                .font(.rounded(.subheadline, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
         }
     }
+
+    @ViewBuilder
+    private func countdown(to date: Date) -> some View {
+        if date.timeIntervalSince(entry.date) < Self.countdownWindow {
+            Text(date, style: .timer)
+        } else {
+            mealTime(date)
+        }
+    }
+
+    private var expiryChip: some View {
+        Label("\(expiringCount) to use soon", systemImage: "hourglass")
+            .font(.rounded(.caption2, weight: .semibold))
+            .foregroundStyle(expiringCount > 0 ? Palette.emberText : Color.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                (expiringCount > 0 ? Palette.ember : Color.secondary).opacity(0.13),
+                in: Capsule()
+            )
+            .accessibilityLabel("\(expiringCount) ingredients to use soon")
+    }
+
+    // MARK: Lock Screen
+
+    private var lockScreen: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Label("Next Meal", systemImage: "fork.knife")
+                .font(.rounded(.caption, weight: .bold))
+                .widgetAccentable()
+            if let meal = nextMeal {
+                Text(meal.name).font(.rounded(.headline, weight: .bold)).lineLimit(1)
+                HStack {
+                    countdown(to: meal.scheduledDate)
+                        .monospacedDigit()
+                    Spacer(minLength: 4)
+                    Label("\(expiringCount)", systemImage: "hourglass")
+                        .accessibilityLabel("\(expiringCount) ingredients to use soon")
+                }
+                .font(.rounded(.caption2, weight: .semibold))
+            } else {
+                Text(emptyMessage).font(.rounded(.caption)).lineLimit(2)
+                if entry.snapshot != nil {
+                    Label("\(expiringCount) to use soon", systemImage: "hourglass")
+                        .font(.rounded(.caption2, weight: .semibold))
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: Helpers
 
     private var emptyMessage: String {
         entry.snapshot == nil ? "Open the app to get started." : "No upcoming meals. Plan one in the app."
     }
 
-    private var accessibilitySummary: String {
-        guard entry.snapshot != nil else { return "Meal Prep Planner. Open the app to get started." }
-        let mealDescription: String
-        if let meal = nextMeal {
-            let time = meal.scheduledDate.formatted(date: .abbreviated, time: .shortened)
-            mealDescription = "Next meal: \(meal.name), \(time)."
-        } else {
-            mealDescription = "No upcoming meals."
-        }
-        return "\(mealDescription) \(remainingMeals.count) meals left today. \(expiringCount) ingredients to use soon."
-    }
-
-    private var expiryLabel: some View {
-        Label("\(expiringCount) to use soon", systemImage: "clock")
-            .font(.caption)
-            .accessibilityLabel("\(expiringCount) ingredients to use soon")
+    private var remainingAccessibilityLabel: String {
+        let count = remainingMeals.count
+        guard count > 0 else { return "No meals left today" }
+        let names = remainingMeals.map(\.name).joined(separator: ", ")
+        return "\(count) \(count == 1 ? "meal" : "meals") left today: \(names)"
     }
 
     @ViewBuilder
@@ -198,7 +250,7 @@ struct MealWidgetView: View {
         if calendar.isDate(date, inSameDayAs: entry.date) {
             Text(date, style: .time)
         } else {
-            Text(date, format: .dateTime.month(.abbreviated).day().hour().minute())
+            Text(date, format: .dateTime.weekday(.abbreviated).hour().minute())
         }
     }
 }
