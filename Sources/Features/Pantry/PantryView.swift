@@ -12,11 +12,13 @@ struct PantryView: View {
 
     private enum PantrySheet: Identifiable {
         case add
+        case edit(Ingredient)
         case use(Ingredient)
 
         var id: String {
             switch self {
             case .add: return "add"
+            case .edit(let ingredient): return "edit-\(ingredient.id.uuidString)"
             case .use(let ingredient): return ingredient.id.uuidString
             }
         }
@@ -66,6 +68,8 @@ struct PantryView: View {
             switch sheet {
             case .add:
                 AddIngredientView(model: model)
+            case .edit(let ingredient):
+                AddIngredientView(model: model, editing: ingredient)
             case .use(let ingredient):
                 PantryUsageSheet(ingredient: ingredient, model: model)
             }
@@ -165,6 +169,16 @@ struct PantryView: View {
                             Label("Delete", systemImage: "trash")
                         }
                         .tint(.red)
+                        .disabled(model.isBusy)
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button {
+                            model.clearError()
+                            presentedSheet = .edit(ingredient)
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        .tint(Palette.sage)
                         .disabled(model.isBusy)
                     }
             }

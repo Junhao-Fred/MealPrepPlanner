@@ -19,9 +19,13 @@ struct AddMealView: View {
         case unit(UUID)
     }
 
-    init(model: MealPlanViewModel) {
+    private let isEditing: Bool
+
+    /// Pass `editing` to change a saved plan instead of adding a new one.
+    init(model: MealPlanViewModel, editing entry: MealPlanEntry? = nil) {
         self.model = model
-        _draft = State(initialValue: model.makeDraft())
+        isEditing = entry != nil
+        _draft = State(initialValue: entry.map { MealEntryDraft(editing: $0) } ?? model.makeDraft())
     }
 
     var body: some View {
@@ -37,7 +41,7 @@ struct AddMealView: View {
                         }
                     }
                     DatePicker("Scheduled for", selection: $draft.scheduledDate,
-                               in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                               in: Calendar.current.startOfDay(for: Date())..., displayedComponents: [.date, .hourAndMinute])
                 }
                 .disabled(isSubmitting || model.isBusy)
 
@@ -101,7 +105,7 @@ struct AddMealView: View {
                 }
                 if isSubmitting { ProgressView("Saving meal…") }
             }
-            .navigationTitle("Add Meal")
+            .navigationTitle(isEditing ? "Edit Meal" : "Add Meal")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
             .plannerCanvas()
