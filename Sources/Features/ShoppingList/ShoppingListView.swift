@@ -97,9 +97,6 @@ struct ShoppingListView: View {
             Text("Unfinished meals: \(snapshot.plannedMealCount)")
                 .font(.rounded(.headline, weight: .medium))
                 .opacity(0.85)
-            Text("Required ingredients minus valid pantry stock. Matching units such as g and kg are combined.")
-                .font(.rounded(.footnote))
-                .opacity(0.8)
         }
         .foregroundStyle(Palette.onSage)
         .bezelCard(
