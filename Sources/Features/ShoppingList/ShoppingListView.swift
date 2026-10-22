@@ -41,10 +41,7 @@ struct ShoppingListView: View {
                     if snapshot.items.isEmpty {
                         Group {
                             if snapshot.plannedMealCount == 0 {
-                                ContentUnavailableView(
-                                    "No Meals to Shop For", systemImage: "calendar",
-                                    description: Text("There are no unfinished meals in this seven-day range. Add meals in Meal Plan to calculate what to buy.")
-                                )
+                                ContentUnavailableView("No Meals to Shop For", systemImage: "calendar")
                             } else {
                                 ContentUnavailableView(
                                     "Nothing to Buy", systemImage: "checkmark.circle",
