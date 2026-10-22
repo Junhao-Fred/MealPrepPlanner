@@ -58,6 +58,15 @@ actor CoreDataMealRepository: MealPlanningRepository {
         }
     }
 
+    func deleteIngredient(id: UUID) async throws {
+        try await write { context in
+            guard let entity = try Self.existing(IngredientEntity.self, id: id, in: context) else {
+                throw RepositoryError.notFound
+            }
+            context.delete(entity)
+        }
+    }
+
     // MARK: Reads
 
     func fetchUpcomingMeals() async throws -> [MealPlanEntry] {

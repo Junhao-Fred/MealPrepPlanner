@@ -32,4 +32,7 @@ protocol MealPlanningRepository: Sendable {
 
     /// Updates an existing entry; throws `RepositoryError.notFound` if its ID is missing.
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws
+
+    /// Removes a pantry batch; throws `RepositoryError.notFound` if its ID is missing.
+    func deleteIngredient(id: UUID) async throws
 }

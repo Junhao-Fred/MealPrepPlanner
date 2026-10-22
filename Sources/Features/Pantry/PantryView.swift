@@ -8,6 +8,7 @@ struct PantryView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: PantryViewModel
     @State private var presentedSheet: PantrySheet?
+    @State private var pendingDeletion: Ingredient?
 
     private enum PantrySheet: Identifiable {
         case add
@@ -69,6 +70,21 @@ struct PantryView: View {
                 PantryUsageSheet(ingredient: ingredient, model: model)
             }
         }
+        .confirmationDialog(
+            "Delete \(pendingDeletion?.name ?? "ingredient")?",
+            isPresented: Binding(
+                get: { pendingDeletion != nil },
+                set: { if !$0 { pendingDeletion = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingDeletion
+        ) { ingredient in
+            Button("Delete", role: .destructive) {
+                Task { await model.deleteIngredient(id: ingredient.id) }
+            }
+        } message: { ingredient in
+            Text("This removes all \(ingredient.quantity.formatted()) \(ingredient.unit) from your pantry.")
+        }
     }
 
     @ViewBuilder
@@ -109,41 +125,56 @@ struct PantryView: View {
         }
     }
 
+    /// A List rather than a ScrollView so each card gets the system swipe-to-delete.
     private var stockList: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                if let message = model.errorMessage {
-                    ErrorCard(message: message, retryTitle: "Retry Refresh", retryDisabled: model.isBusy) {
-                        Task { await model.load() }
-                    }
-                } else if model.needsReload && !model.isLoading {
-                    ErrorCard(message: "Refresh the pantry before using stock.", retryTitle: "Refresh", retryDisabled: model.isBusy) {
-                        Task { await model.load() }
-                    }
+        List {
+            if let message = model.errorMessage {
+                ErrorCard(message: message, retryTitle: "Retry Refresh", retryDisabled: model.isBusy) {
+                    Task { await model.load() }
                 }
-
-                if model.isLoading {
-                    ProgressView("Refreshing pantry…")
-                        .font(.rounded(.subheadline))
-                        .frame(maxWidth: .infinity)
+                .canvasRow()
+            } else if model.needsReload && !model.isLoading {
+                ErrorCard(message: "Refresh the pantry before using stock.", retryTitle: "Refresh", retryDisabled: model.isBusy) {
+                    Task { await model.load() }
                 }
-
-                SectionHeading(
-                    eyebrow: "\(model.ingredients.count) in stock",
-                    title: "Available Stock",
-                    systemImage: "shippingbox"
-                )
-
-                ForEach(model.ingredients) { ingredient in
-                    ingredientCard(ingredient)
-                        .revealOnScroll()
-                }
+                .canvasRow()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .padding(.bottom, 40)
-            .animation(Theme.spring, value: model.ingredients)
+
+            if model.isLoading {
+                ProgressView("Refreshing pantry…")
+                    .font(.rounded(.subheadline))
+                    .frame(maxWidth: .infinity)
+                    .canvasRow()
+            }
+
+            SectionHeading(
+                eyebrow: "\(model.ingredients.count) in stock",
+                title: "Available Stock",
+                systemImage: "shippingbox"
+            )
+            .canvasRow()
+
+            ForEach(model.ingredients) { ingredient in
+                ingredientCard(ingredient)
+                    .canvasRow()
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button {
+                            model.clearError()
+                            pendingDeletion = ingredient
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        .tint(.red)
+                        .disabled(model.isBusy)
+                    }
+            }
         }
+        .listStyle(.plain)
+        .listRowSpacing(18)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.top, 4, for: .scrollContent)
+        .contentMargins(.bottom, 40, for: .scrollContent)
+        .animation(Theme.spring, value: model.ingredients)
         .refreshable { await model.load() }
     }
 
@@ -209,6 +240,15 @@ struct PantryView: View {
         } else {
             StatusBadge(text: "No expiry date", systemImage: "infinity")
         }
+    }
+}
+
+private extension View {
+    /// Shows a card on the canvas inside a List: no row background, separator or default insets.
+    func canvasRow() -> some View {
+        listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
     }
 }
 

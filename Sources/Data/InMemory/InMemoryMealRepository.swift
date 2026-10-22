@@ -84,6 +84,12 @@ actor InMemoryMealRepository: MealPlanningRepository {
         writeCount += 1
     }
 
+    func deleteIngredient(id: UUID) async throws {
+        try check(.write)
+        guard ingredients.removeValue(forKey: id) != nil else { throw RepositoryError.notFound }
+        writeCount += 1
+    }
+
     // MARK: Reads
 
     func fetchUpcomingMeals() async throws -> [MealPlanEntry] {
