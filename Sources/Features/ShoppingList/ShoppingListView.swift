@@ -102,9 +102,6 @@ struct ShoppingListView: View {
     private func itemsCard(_ items: [ShoppingListItem]) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeading(eyebrow: "\(items.count) to buy", title: "To Buy", systemImage: "bag")
-            Text("Tap the check mark after buying an item to add it to your pantry.")
-                .font(.rounded(.footnote))
-                .foregroundStyle(.secondary)
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     if index > 0 { Divider().overlay(Palette.hairline) }
