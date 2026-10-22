@@ -97,7 +97,7 @@ struct ShoppingListView: View {
             Text("Unfinished meals: \(snapshot.plannedMealCount)")
                 .font(.rounded(.headline, weight: .medium))
                 .opacity(0.85)
-            Text("Required ingredients minus valid pantry stock. Different units are listed separately.")
+            Text("Required ingredients minus valid pantry stock. Matching units such as g and kg are combined.")
                 .font(.rounded(.footnote))
                 .opacity(0.8)
         }
@@ -111,6 +111,9 @@ struct ShoppingListView: View {
     private func itemsCard(_ items: [ShoppingListItem]) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeading(eyebrow: "\(items.count) to buy", title: "To Buy", systemImage: "bag")
+            Text("Tap the check mark after buying an item to add it to your pantry.")
+                .font(.rounded(.footnote))
+                .foregroundStyle(.secondary)
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     if index > 0 { Divider().overlay(Palette.hairline) }
@@ -122,9 +125,22 @@ struct ShoppingListView: View {
                         Text("\(item.quantity.formatted()) \(item.unit)")
                             .font(.rounded(.title3, weight: .bold))
                             .foregroundStyle(Palette.sage)
+                        Button {
+                            Task { await model.addToPantry(item) }
+                        } label: {
+                            if model.addingItemID == item.id {
+                                ProgressView()
+                            } else {
+                                Image(systemName: "checkmark.circle")
+                                    .font(.title2)
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .disabled(model.addingItemID != nil || model.isLoading)
+                        .accessibilityLabel("Bought \(item.name), add to pantry")
                     }
                     .padding(.vertical, 10)
-                    .accessibilityElement(children: .combine)
                 }
             }
             .bezelCard(padding: 16)
