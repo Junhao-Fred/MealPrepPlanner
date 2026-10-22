@@ -132,8 +132,6 @@ struct PantryView: View {
         } else {
             ContentUnavailableView {
                 Label("No Pantry Stock", systemImage: "cabinet")
-            } description: {
-                Text("Your ingredients will appear here once added. Used-up batches are hidden.")
             } actions: {
                 Button("Add Ingredient", action: addIngredient)
                     .buttonStyle(PillButtonStyle(systemImage: "plus"))
