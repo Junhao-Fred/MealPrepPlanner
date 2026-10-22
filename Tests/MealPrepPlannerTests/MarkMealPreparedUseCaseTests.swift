@@ -22,7 +22,7 @@ struct MarkMealPreparedUseCaseTests {
         #expect(writes == 0)
     }
 
-    @Test("Preparing a meal returns the saved entry without using pantry stock")
+    @Test("Preparing a meal saves the entry and deducts its recipe from pantry stock once")
     func prepareMeal() async throws {
         let entry = makeEntry()
         let stock = Ingredient(name: "Oats", quantity: 500, unit: "g")
@@ -35,13 +35,15 @@ struct MarkMealPreparedUseCaseTests {
         #expect(result == expected)
         let stored = try await useCase.load(id: entry.id)
         #expect(stored == expected)
+        var deducted = stock
+        deducted.quantity = 420
         let remainingStock = try await repository.fetchAvailableIngredients()
-        #expect(remainingStock == [stock])
+        #expect(remainingStock == [deducted])
 
         let repeated = try await useCase.execute(id: entry.id)
         #expect(repeated == expected)
         let writes = await repository.writeCount
-        #expect(writes == 1)
+        #expect(writes == 2)
     }
 
     @Test("Failed completion preserves the stored plan")
