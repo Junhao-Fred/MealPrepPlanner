@@ -1,6 +1,6 @@
 # MealPrepPlanner
 
-A SwiftUI meal planner with Today, Meal Plan, Pantry and Shopping List tabs, Core Data persistence, and a WidgetKit extension. Shopping quantities combine unfinished meal requirements and subtract valid pantry stock. Marking a meal as prepared updates its status; stock deductions are confirmed separately through Pantry.
+A SwiftUI meal planner with Today, Meal Plan, Pantry and Shopping List tabs, Core Data persistence, and a WidgetKit extension. Shopping quantities combine unfinished meal requirements and subtract valid pantry stock, converting matching units (g/kg, ml/l) and simple plurals. Marking a meal as prepared deducts its recipe from pantry stock, soonest expiry first, and can be undone. Pantry items and planned meals can be edited and deleted, and the app schedules local reminders before stock expires.
 
 ## Requirements and current verification
 
@@ -15,9 +15,9 @@ Use a Mac with full Xcode, its command-line tools, and an installed iOS Simulato
 | Test configuration | Debug, hosted by the app |
 | Dependencies | Apple frameworks; no package manifest, CocoaPods setup or external package references are checked in |
 
-Sources: [build settings](MealPrepPlanner.xcodeproj/project.pbxproj) and [shared scheme](MealPrepPlanner.xcodeproj/xcshareddata/xcschemes/MealPrepPlanner.xcscheme). Tool metadata contains versions 26.6 and 27.1; these are authoring metadata, not recorded successful build results.
+Sources: [build settings](MealPrepPlanner.xcodeproj/project.pbxproj) and [shared scheme](MealPrepPlanner.xcodeproj/xcshareddata/xcschemes/MealPrepPlanner.xcscheme).
 
-The C17 documentation was checked against source on Windows. Earlier changes passed Swift syntax parsing; **Xcode compilation, test execution, signing, widget sharing and device accessibility remain pending Mac verification**. Windows Swift alone cannot build this iOS app. Record the exact working macOS/Xcode/runtime combination in the verification section after running it.
+Verified on macOS 26.7.1 with Xcode 27.1 (27A9275) and the iPhone 17 Pro simulator on iOS 26.4: the app and widget build with 0 warnings and all 181 tests pass. Signing on a physical device and VoiceOver have not been verified; see the record at the end.
 
 ## Open and run
 
@@ -29,7 +29,7 @@ cd MealPrepPlanner
 git fetch origin
 ```
 
-Use the reviewed branch containing this README and the integrated features. During C17 review this is `docs/mingchen-handoff`, based on C16 (`59dad1b`). Once that branch is pushed, select it with `git switch docs/mingchen-handoff`. At the time of writing, `develop` is `1d3d7b2` and does not yet contain these integrated features. After merge, use the agreed integration branch.
+Use the `develop` branch, which contains the integrated features: `git switch develop`. If you received the source archive instead, open the unzipped `MealPrepPlanner` folder directly; no Git checkout is needed.
 
 ```sh
 xcodebuild -version
@@ -93,17 +93,18 @@ xcodebuild test \
   -resultBundlePath "$RESULT_PATH"
 ```
 
-Check the command's exit status and test summary, then open the generated `.xcresult` in Xcode. Use a new result path for each run. Both `build/` and `*.xcresult` are ignored by Git. The command is a documented procedure pending a Mac run, not a recorded passing result.
+Check the command's exit status and test summary, then open the generated `.xcresult` in Xcode. Use a new result path for each run. Both `build/` and `*.xcresult` are ignored by Git.
 
 For a focused rerun, add `-only-testing:MealPrepPlannerTests/ShoppingListUseCaseTests` to the same `xcodebuild test` command. Other useful suites are:
 
 | Area | Suites |
 | --- | --- |
-| Pantry validation, usage and input | `PantryUseCaseTests`, `PantryViewModelTests`, `PantryQuantityParserTests`, `IngredientEntryDraftTests` |
-| Meal scheduling, querying and save failures | `PlanMealUseCaseTests`, `MealPlanQueryTests`, `MealPlanViewModelTests`, `MealEntryTests` |
+| Pantry validation, usage, grouping and deletion | `PantryUseCaseTests`, `PantryViewModelTests`, `PantryQuantityParserTests`, `IngredientEntryDraftTests`, `PantryGroupingTests`, `PantryDeleteTests` |
+| Meal scheduling, editing, querying and deletion | `PlanMealUseCaseTests`, `MealPlanQueryTests`, `MealPlanViewModelTests`, `MealEntryTests`, `MealPlanDeleteTests`, `EditingAndFollowUpTests` |
+| Ingredient matching and stock adjustment | `IngredientMatchingTests`, `AdjustPantryForMealTests`, `MarkMealPreparedUseCaseTests` |
 | Shopping boundaries, failures and refresh | `ShoppingListUseCaseTests`, `ShoppingListViewModelTests`, `FeatureDataRefreshTests` |
-| Persistence and restart behavior | `CoreDataMealRepositoryTests`, `CoreDataUpsertTests`, `CoreDataRegressionTests`, `RepositoryErrorMappingTests` |
-| Today and widgets | `TodayViewModelTests`, `MarkMealPreparedUseCaseTests`, `WidgetSnapshotTests`, `WidgetSnapshotRefresherTests`, `WidgetTimelineTests` |
+| Persistence and restart behavior | `CoreDataMealRepositoryTests`, `CoreDataUpsertTests`, `CoreDataRegressionTests`, `RepositoryErrorMappingTests`, `InMemoryMealRepositoryTests` |
+| Today, widgets and reminders | `TodayViewModelTests`, `ExpiryRulesTests`, `WidgetSnapshotTests`, `WidgetSnapshotRefresherTests`, `WidgetTimelineTests`, `ExpiryReminderTests` |
 
 Tests live in [Tests/MealPrepPlannerTests](Tests/MealPrepPlannerTests). Core Data tests include temporary SQLite stores; widget tests use temporary defaults suites. There is no separate UI-test target, and these tests do not establish VoiceOver behavior or real App Group provisioning.
 
@@ -114,12 +115,14 @@ Use a fresh test installation with no existing rice stock or meal demand. Schedu
 1. In Pantry, add **Rice, 200 g**, with no expiry date.
 2. In Meal Plan, create two meals requiring **300 g** and **250 g** of Rice. Shopping List should show **350 g** to buy and **2** unfinished meals.
 3. In Pantry, confirm usage of **50 g**. Remaining stock should be **150 g** and the shopping shortfall **400 g**.
-4. In Today, open the **300 g** meal and select **Mark as Prepared**. Meal Plan should show Prepared; Shopping List should show **100 g** to buy and **1** unfinished meal. Pantry should still contain **150 g**.
-5. Stop and relaunch the app without uninstalling it. Confirm that the plans, completion status and remaining stock persist.
-6. In Add Meal, enter an invalid quantity in the second ingredient row and save. Check that the second quantity field receives keyboard focus and an error appears. Edit the input and confirm the old message clears. With VoiceOver, check that each row's quantity, unit and removal controls identify the correct ingredient. Also check large text and dark mode on the device.
-7. Add the widget and check the remaining future meal. Keep widget verification separate from the in-app checks.
+4. In Meal Plan, open the **300 g** meal and select **Mark as Prepared**. The details screen should report that the pantry was **150 g** short. Pantry should no longer list Rice; Shopping List should show **250 g** to buy and **1** unfinished meal.
+5. In Shopping List, tap the check mark next to Rice. Pantry should show **Rice, 250 g** and the shopping list should be empty.
+6. In Pantry, add **Rice, 1 kg**. Pantry should show one Rice item of **1.25 kg** listing both batches. Swipe it right to edit a batch, and left to delete the item after confirming.
+7. Stop and relaunch the app without uninstalling it. Confirm that the plans, completion status and remaining stock persist.
+8. In Add Meal, enter an invalid quantity in the second ingredient row and save. Check that the second quantity field receives keyboard focus and an error appears. Edit the input and confirm the old message clears. With VoiceOver, check that each row's quantity, unit and removal controls identify the correct ingredient. Also check large text and dark mode on the device.
+9. Add the widget and check the remaining future meal. Keep widget verification separate from the in-app checks.
 
-The shopping window is `[local midnight today, local midnight seven calendar days later)`. Stock is valid through its expiry day. Different units remain separate; there is no g/kg conversion.
+The shopping window is `[local midnight today, local midnight seven calendar days later)`. Stock is valid through its expiry day. Names ignore case, spaces and simple plurals. Units convert within mass (mg, g, kg, oz, lb), volume (ml, cl, dl, l, tsp, tbsp, cup) and count (piece, pcs, count, each, item); other units match only themselves.
 
 ## Troubleshooting
 
@@ -132,17 +135,26 @@ The shopping window is `[local midnight today, local midnight seven calendar day
 | Widget is empty or stale | Open the app, create a future unfinished meal, check matching groups and inspect Xcode console messages in the `WidgetSnapshot` category. |
 | “Can't Open Your Data” appears | Retry, then inspect the Core Data error in Xcode. Keep the failing store for diagnosis; uninstalling the app removes its saved data. |
 | Previews contain meals but the running app is empty | Previews use sample fixtures; create data in the persistent app through its forms. |
+| No expiry reminders appear | Reminders need notification permission and an expiry date; they fire at 9:00 the day before expiry. Check Settings > Notifications > MealPrep Planner. |
+
+## Support and privacy pages
+
+The marketing page, support page and privacy policy are published with GitHub Pages from the `gh-pages` branch:
+
+- https://junhao-fred.github.io/MealPrepPlanner/
+- https://junhao-fred.github.io/MealPrepPlanner/support/
+- https://junhao-fred.github.io/MealPrepPlanner/privacy/
 
 ## Independent verification record
 
-An A/B teammate should follow these instructions from a clean checkout on a Mac and record the actual outcome below. Source settings have been checked; teammate confirmation and execution results have not yet been supplied.
+A teammate should follow these instructions from a clean checkout on a Mac and add their outcome below. The developer run is recorded first.
 
-- Reviewer / date: **Pending**
-- Branch / commit reviewed: **Pending**
-- macOS / Xcode version and build: **Pending**
-- Simulator or device / iOS version: **Pending**
-- Signing and identifier changes: **Pending**
-- Test summary and `.xcresult` location: **Pending**
-- Smoke check, persistence and widget outcome: **Pending**
-- VoiceOver, large text and dark mode outcome: **Pending**
-- Problems found and follow-up: **Pending**
+- Reviewer / date: Junhao Huang, 25 October 2026 (developer run)
+- Source reviewed: the submitted source archive, unzipped into an empty folder
+- macOS / Xcode version and build: macOS 26.7.1 / Xcode 27.1 (27A9275)
+- Simulator or device / iOS version: iPhone 17 Pro simulator / iOS 26.4
+- Signing and identifier changes: none; simulator only
+- Test summary: 181 tests in 31 suites passed; 0 build warnings
+- Smoke check, persistence and widget outcome: deletion, missed meals, pantry grouping and the shopping list checked in the simulator; editing, stock deduction and undo covered by unit tests; widget on the Home Screen **Pending**
+- VoiceOver, large text and dark mode outcome: dark mode checked; VoiceOver and large text **Pending**
+- Problems found and follow-up: physical-device signing **Pending**
