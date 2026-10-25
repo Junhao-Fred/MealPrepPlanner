@@ -22,7 +22,7 @@ struct PlanMealUseCaseTests {
     @Test("T16 blank names and other invalid plans never reach storage")
     func invalidPlansDoNotWrite() async {
         let repository = RecordingMealRepository()
-        let useCase = PlanMealUseCase(repository: repository, now: { now })
+        let useCase = PlanMealUseCase(repository: repository, calendar: utc, now: { now })
         // T16: a whitespace-only name must throw emptyMealName before saving.
         var emptyName = makeEntry()
         emptyName.meal.name = " \n "
@@ -31,7 +31,7 @@ struct PlanMealUseCaseTests {
         var invalidIngredient = makeEntry()
         invalidIngredient.meal.ingredients[0].quantity = 0
         var pastSchedule = makeEntry()
-        pastSchedule.scheduledDate = now.addingTimeInterval(-1)
+        pastSchedule.scheduledDate = utc.startOfDay(for: now).addingTimeInterval(-1)
 
         let invalidCases: [(MealPlanEntry, MealPlanningValidationError)] = [
             (emptyName, .emptyMealName),
@@ -53,6 +53,24 @@ struct PlanMealUseCaseTests {
 
         let savedEntries = await repository.plannedEntries
         #expect(savedEntries.isEmpty)
+    }
+
+    @Test("A meal from earlier today can still be logged")
+    func earlierTodayIsAllowed() async throws {
+        let repository = RecordingMealRepository()
+        var entry = makeEntry()
+        entry.scheduledDate = utc.startOfDay(for: now).addingTimeInterval(60)
+
+        try await PlanMealUseCase(repository: repository, calendar: utc, now: { now }).execute(entry)
+
+        let savedEntries = await repository.plannedEntries
+        #expect(savedEntries == [entry])
+    }
+
+    private var utc: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        return calendar
     }
 
     private func makeEntry() -> MealPlanEntry {
@@ -87,6 +105,8 @@ private actor RecordingMealRepository: MealPlanningRepository {
         throw UnexpectedCall()
     }
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { throw UnexpectedCall() }
+    func deleteIngredient(id: UUID) async throws { throw UnexpectedCall() }
+    func deleteMealPlanEntry(id: UUID) async throws { throw UnexpectedCall() }
 }
 
 private struct UnexpectedCall: Error {}

@@ -6,18 +6,24 @@ struct MealDetailsRoute: Hashable {
 
 @MainActor
 struct MealDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var model: MealDetailViewModel
-    let onPrepared: () async -> Void
+    @State private var confirmingUndo = false
+    @State private var confirmingDelete = false
+    /// Called after the meal is prepared, un-prepared or deleted.
+    let onChange: () async -> Void
 
     init(
         id: UUID,
         repository: any MealPlanningRepository,
-        onPrepared: @escaping () async -> Void
+        onChange: @escaping () async -> Void
     ) {
         _model = State(initialValue: MealDetailViewModel(
-            id: id, useCase: MarkMealPreparedUseCase(repository: repository)
+            id: id,
+            useCase: MarkMealPreparedUseCase(repository: repository),
+            deleteUseCase: DeleteMealPlanEntryUseCase(repository: repository)
         ))
-        self.onPrepared = onPrepared
+        self.onChange = onChange
     }
 
     var body: some View {
@@ -125,6 +131,11 @@ struct MealDetailView: View {
                     .foregroundStyle(Palette.amber)
                     .accessibilityLabel("Error: \(message)")
             }
+            if let notice = model.notice {
+                Label(notice, systemImage: "info.circle.fill")
+                    .font(.rounded(.subheadline, weight: .medium))
+                    .foregroundStyle(Palette.sage)
+            }
             if entry.isPrepared {
                 Label("Prepared", systemImage: "checkmark.circle.fill")
                     .font(.rounded(.headline, weight: .semibold))
@@ -132,10 +143,16 @@ struct MealDetailView: View {
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .background(Palette.sageSoft, in: Capsule())
                     .accessibilityLabel("Meal prepared")
+                Button("Mark as Not Prepared") { confirmingUndo = true }
+                    .buttonStyle(PillButtonStyle(systemImage: "arrow.uturn.backward", prominent: false, fillsWidth: true))
+                    .disabled(model.isSaving || model.isLoading)
             } else {
+                Text("Marking it prepared takes the ingredients out of your pantry.")
+                    .font(.rounded(.footnote))
+                    .foregroundStyle(.secondary)
                 Button {
                     Task {
-                        if await model.markPrepared() { await onPrepared() }
+                        if await model.markPrepared() { await onChange() }
                     }
                 } label: {
                     if model.isSaving {
@@ -147,6 +164,34 @@ struct MealDetailView: View {
                 .buttonStyle(PillButtonStyle(systemImage: "checkmark", fillsWidth: true))
                 .disabled(model.isSaving || model.isLoading)
             }
+            if model.canDelete {
+                Button("Delete Meal", role: .destructive) { confirmingDelete = true }
+                    .font(.rounded(.body, weight: .semibold))
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .disabled(model.isSaving || model.isLoading)
+            }
+        }
+        .confirmationDialog("Mark as not prepared?", isPresented: $confirmingUndo, titleVisibility: .visible) {
+            Button("Add Ingredients Back to Pantry") {
+                Task { if await model.undoPrepared(returningIngredients: true) { await onChange() } }
+            }
+            Button("Keep Pantry As Is") {
+                Task { if await model.undoPrepared(returningIngredients: false) { await onChange() } }
+            }
+        } message: {
+            Text("Choose whether the recipe's ingredients go back into your pantry.")
+        }
+        .confirmationDialog("Delete \(entry.meal.name)?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                Task {
+                    if await model.delete() {
+                        await onChange()
+                        dismiss()
+                    }
+                }
+            }
+        } message: {
+            Text("This removes the meal from your plan and shopping list. Pantry stock is not changed.")
         }
     }
 }

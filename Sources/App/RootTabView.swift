@@ -76,15 +76,17 @@ enum AppTab: String, CaseIterable, Identifiable {
 private struct MealPlanTab: View {
     @State private var model: MealPlanViewModel
 
+    let repository: any MealPlanningRepository
     let dataVersion: Int
 
     init(repository: any MealPlanningRepository, dataVersion: Int) {
+        self.repository = repository
         self.dataVersion = dataVersion
         _model = State(initialValue: MealPlanViewModel(repository: repository))
     }
 
     var body: some View {
-        MealPlanView(model: model, dataVersion: dataVersion)
+        MealPlanView(model: model, repository: repository, dataVersion: dataVersion)
     }
 }
 

@@ -8,37 +8,42 @@ struct MealPlanView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: MealPlanViewModel
     @State private var showingAddMeal = false
+    @State private var pendingDeletion: MealPlanEntry?
+    @State private var editingEntry: MealPlanEntry?
 
+    private let repository: any MealPlanningRepository
     private let dataVersion: Int
 
-    init(model: MealPlanViewModel, dataVersion: Int = 0) {
+    /// `repository` opens meal details; pass the same one the model uses.
+    init(model: MealPlanViewModel, repository: any MealPlanningRepository, dataVersion: Int = 0) {
+        self.repository = repository
         self.dataVersion = dataVersion
         _model = State(initialValue: model)
     }
 
+    /// A List rather than a ScrollView so each meal gets the system swipe-to-delete.
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 26) {
-                rangeCard
+        List {
+            rangeCard
+                .canvasRow()
 
-                if model.isLoading {
-                    ProgressView(model.hasLoaded ? "Refreshing meal plan…" : "Loading meal plan…")
-                        .font(.rounded(.subheadline))
-                        .frame(maxWidth: .infinity)
-                }
+            if model.isLoading {
+                ProgressView(model.hasLoaded ? "Refreshing meal plan…" : "Loading meal plan…")
+                    .font(.rounded(.subheadline))
+                    .frame(maxWidth: .infinity)
+                    .canvasRow()
+            }
 
-                if let message = model.errorMessage {
-                    ErrorCard(message: message, retryDisabled: model.isBusy) { Task { await model.load() } }
-                }
+            if let message = model.errorMessage {
+                ErrorCard(message: message, retryDisabled: model.isBusy) { Task { await model.load() } }
+                    .canvasRow()
+            }
 
-                if model.days.isEmpty && !model.isLoading && model.errorMessage == nil {
+            if model.days.isEmpty && !model.isLoading && model.errorMessage == nil {
+                Group {
                     if model.hasLoaded {
                         VStack(spacing: 4) {
-                            ContentUnavailableView(
-                                "No Meals Planned",
-                                systemImage: "calendar",
-                                description: Text("There are no meals in this date range. Choose another starting date to browse your plans.")
-                            )
+                            ContentUnavailableView("No Meals Planned", systemImage: "calendar")
                             Button("Add Meal", action: addMeal)
                                 .buttonStyle(PillButtonStyle(systemImage: "plus"))
                                 .disabled(model.isBusy)
@@ -49,22 +54,52 @@ struct MealPlanView: View {
                             .buttonStyle(PillButtonStyle(systemImage: "arrow.clockwise"))
                     }
                 }
+                .canvasRow()
+            }
 
-                ForEach(model.days) { day in
-                    VStack(alignment: .leading, spacing: 12) {
-                        dayHeading(day.date)
-                        ForEach(day.entries) { entry in
-                            mealRow(entry)
-                                .revealOnScroll()
+            ForEach(model.days) { day in
+                dayHeading(day.date)
+                    .padding(.top, 14)
+                    .canvasRow()
+                ForEach(day.entries) { entry in
+                    mealRow(entry)
+                        .background {
+                            // Hidden link: the row opens details without the list's own chevron.
+                            NavigationLink(value: MealDetailsRoute(id: entry.id)) { EmptyView() }
+                                .opacity(0)
                         }
-                    }
+                        .canvasRow()
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button {
+                                model.clearError()
+                                pendingDeletion = entry
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                            .disabled(model.isBusy)
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            if !entry.isPrepared {
+                                Button {
+                                    model.clearError()
+                                    editingEntry = entry
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(Palette.sage)
+                                .disabled(model.isBusy)
+                            }
+                        }
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .padding(.bottom, 40)
-            .animation(Theme.spring, value: model.days)
         }
+        .listStyle(.plain)
+        .listRowSpacing(12)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.top, 4, for: .scrollContent)
+        .contentMargins(.bottom, 40, for: .scrollContent)
+        .animation(Theme.spring, value: model.days)
         .plannerCanvas()
         .navigationTitle("Meal Plan")
         .toolbar {
@@ -90,6 +125,27 @@ struct MealPlanView: View {
             if phase == .active && !showingAddMeal { Task { await model.load() } }
         }
         .sheet(isPresented: $showingAddMeal) { AddMealView(model: model) }
+        .sheet(item: $editingEntry) { entry in AddMealView(model: model, editing: entry) }
+        .navigationDestination(for: MealDetailsRoute.self) { route in
+            MealDetailView(id: route.id, repository: repository) {
+                await model.load()
+            }
+        }
+        .confirmationDialog(
+            "Delete \(pendingDeletion?.meal.name ?? "meal")?",
+            isPresented: Binding(
+                get: { pendingDeletion != nil },
+                set: { if !$0 { pendingDeletion = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingDeletion
+        ) { entry in
+            Button("Delete", role: .destructive) {
+                Task { await model.deleteEntry(id: entry.id) }
+            }
+        } message: { entry in
+            Text("This removes the \(entry.mealType.displayName.lowercased()) on \(entry.scheduledDate.formatted(date: .abbreviated, time: .shortened)) from your plan and shopping list.")
+        }
     }
 
     private func addMeal() {
@@ -166,8 +222,13 @@ struct MealPlanView: View {
                 }
             }
             Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
         .bezelCard(padding: 14)
         .accessibilityElement(children: .combine)
+        .accessibilityHint("View meal details")
     }
 }

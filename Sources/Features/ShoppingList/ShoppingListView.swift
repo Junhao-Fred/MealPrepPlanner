@@ -41,15 +41,9 @@ struct ShoppingListView: View {
                     if snapshot.items.isEmpty {
                         Group {
                             if snapshot.plannedMealCount == 0 {
-                                ContentUnavailableView(
-                                    "No Meals to Shop For", systemImage: "calendar",
-                                    description: Text("There are no unfinished meals in this seven-day range. Add meals in Meal Plan to calculate what to buy.")
-                                )
+                                ContentUnavailableView("No Meals to Shop For", systemImage: "calendar")
                             } else {
-                                ContentUnavailableView(
-                                    "Nothing to Buy", systemImage: "checkmark.circle",
-                                    description: Text("Your pantry covers the ingredients needed for these meals.")
-                                )
+                                ContentUnavailableView("Nothing to Buy", systemImage: "checkmark.circle")
                             }
                         }
                         .bezelCard(padding: 20)
@@ -97,9 +91,6 @@ struct ShoppingListView: View {
             Text("Unfinished meals: \(snapshot.plannedMealCount)")
                 .font(.rounded(.headline, weight: .medium))
                 .opacity(0.85)
-            Text("Required ingredients minus valid pantry stock. Different units are listed separately.")
-                .font(.rounded(.footnote))
-                .opacity(0.8)
         }
         .foregroundStyle(Palette.onSage)
         .bezelCard(
@@ -122,9 +113,22 @@ struct ShoppingListView: View {
                         Text("\(item.quantity.formatted()) \(item.unit)")
                             .font(.rounded(.title3, weight: .bold))
                             .foregroundStyle(Palette.sage)
+                        Button {
+                            Task { await model.addToPantry(item) }
+                        } label: {
+                            if model.addingItemID == item.id {
+                                ProgressView()
+                            } else {
+                                Image(systemName: "checkmark.circle")
+                                    .font(.title2)
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .disabled(model.addingItemID != nil || model.isLoading)
+                        .accessibilityLabel("Bought \(item.name), add to pantry")
                     }
                     .padding(.vertical, 10)
-                    .accessibilityElement(children: .combine)
                 }
             }
             .bezelCard(padding: 16)

@@ -7,7 +7,7 @@ enum MealEntryDraftError: Error, Equatable {
 }
 
 struct MealIngredientDraft: Identifiable, Equatable {
-    let id = UUID()
+    var id = UUID()
     var name = ""
     var quantityText = ""
     var unit = ""
@@ -15,12 +15,35 @@ struct MealIngredientDraft: Identifiable, Equatable {
 
 /// Stable IDs let a failed submission retry the same plan, recipe and ingredient rows.
 struct MealEntryDraft: Equatable {
-    let id = UUID()
-    let mealID = UUID()
+    let id: UUID
+    let mealID: UUID
     var name = ""
     var mealType: MealType = .dinner
     var scheduledDate: Date
     var ingredients: [MealIngredientDraft] = [MealIngredientDraft()]
+
+    init(scheduledDate: Date) {
+        id = UUID()
+        mealID = UUID()
+        self.scheduledDate = scheduledDate
+    }
+
+    /// Prefills the form from a saved plan; saving keeps its plan, recipe and ingredient IDs.
+    init(editing entry: MealPlanEntry, locale: Locale = .current) {
+        id = entry.id
+        mealID = entry.meal.id
+        name = entry.meal.name
+        mealType = entry.mealType
+        scheduledDate = entry.scheduledDate
+        ingredients = entry.meal.ingredients.map { ingredient in
+            MealIngredientDraft(
+                id: ingredient.id,
+                name: ingredient.name,
+                quantityText: NSDecimalNumber(decimal: ingredient.quantity).description(withLocale: locale),
+                unit: ingredient.unit
+            )
+        }
+    }
 
     func makeEntry(locale: Locale = .current) throws -> MealPlanEntry {
         let recipe = try ingredients.enumerated().map { index, row in

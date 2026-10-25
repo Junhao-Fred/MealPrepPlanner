@@ -9,13 +9,21 @@ struct AddIngredientView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
     @Environment(\.calendar) private var calendar
-    @State private var draft = IngredientEntryDraft()
+    @State private var draft: IngredientEntryDraft
     @State private var validationMessage: String?
     @State private var isSubmitting = false
     @FocusState private var focusedField: Field?
+    private let isEditing: Bool
 
     private enum Field: Hashable {
         case name, quantity, unit
+    }
+
+    /// Pass `editing` to change a stored batch instead of adding a new one.
+    init(model: PantryViewModel, editing ingredient: Ingredient? = nil) {
+        self.model = model
+        isEditing = ingredient != nil
+        _draft = State(initialValue: ingredient.map { IngredientEntryDraft(editing: $0) } ?? IngredientEntryDraft())
     }
 
     var body: some View {
@@ -65,7 +73,7 @@ struct AddIngredientView: View {
                     ProgressView("Saving ingredient…")
                 }
             }
-            .navigationTitle("Add Ingredient")
+            .navigationTitle(isEditing ? "Edit Ingredient" : "Add Ingredient")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
             .plannerCanvas()

@@ -42,14 +42,16 @@ struct MealWidgetSnapshot: Codable, Equatable, Sendable {
     }
 
     /// Same window as the app's expiry rule: expiry day in [today, today + 3 days).
+    /// One entry per ingredient, so two batches of tomatoes count once.
     func useSoonIngredients(at date: Date, calendar: Calendar) -> [ExpiringIngredient] {
         let start = calendar.startOfDay(for: date)
         guard let end = calendar.date(byAdding: .day, value: Self.useSoonDays, to: start) else {
             return []
         }
+        var seen = Set<String>()
         return ingredients.filter { ingredient in
             let day = calendar.startOfDay(for: ingredient.expiryDate)
-            return day >= start && day < end
+            return day >= start && day < end && seen.insert(IngredientMatching.normalizedName(ingredient.name)).inserted
         }
     }
 

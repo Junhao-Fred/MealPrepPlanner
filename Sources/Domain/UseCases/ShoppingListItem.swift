@@ -12,14 +12,15 @@ struct ShoppingListSnapshot: Equatable, Sendable {
 
 /// A positive purchase shortfall for one ingredient and unit.
 struct ShoppingListItem: Identifiable, Equatable, Sendable {
-    /// Matching ignores whitespace and case; units are never converted.
+    /// Matching follows `IngredientMatching`: plurals and convertible units share one ID.
     struct ID: Hashable, Sendable {
         let name: String
         let unit: String
 
         init(name: String, unit: String) {
-            self.name = name.filter { !$0.isWhitespace }.lowercased()
-            self.unit = unit.filter { !$0.isWhitespace }.lowercased()
+            let key = IngredientMatching.key(name: name, unit: unit)
+            self.name = key.name
+            self.unit = key.unit
         }
     }
 

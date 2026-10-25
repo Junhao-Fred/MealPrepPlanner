@@ -6,19 +6,23 @@ enum MealPlanningValidationError: Error, Equatable, Sendable {
     case emptyMealName
     case emptyIngredients
     case invalidIngredient
+    /// Scheduled before today. Earlier today is allowed, so a meal can be logged after it happened.
     case scheduledInThePast
 }
 
 /// Validates and atomically saves a scheduled meal.
 struct PlanMealUseCase: Sendable {
     private let repository: any MealPlanningRepository
+    private let calendar: Calendar
     private let now: @Sendable () -> Date
 
     init(
         repository: any MealPlanningRepository,
+        calendar: Calendar = .current,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.repository = repository
+        self.calendar = calendar
         self.now = now
     }
 
@@ -37,7 +41,7 @@ struct PlanMealUseCase: Sendable {
         }) else {
             throw MealPlanningValidationError.invalidIngredient
         }
-        guard entry.scheduledDate >= now() else {
+        guard entry.scheduledDate >= calendar.startOfDay(for: now()) else {
             throw MealPlanningValidationError.scheduledInThePast
         }
 
