@@ -17,6 +17,7 @@ final class MealPlanViewModel {
     private(set) var days: [MealPlanDay] = []
     private(set) var isLoading = false
     private(set) var isSaving = false
+    private(set) var deletingEntryID: UUID?
     private(set) var hasLoaded = false
     private(set) var errorMessage: String?
 
@@ -24,6 +25,7 @@ final class MealPlanViewModel {
 
     private let useCase: GetMealPlanUseCase
     private let saveUseCase: PlanMealUseCase
+    private let deleteUseCase: DeleteMealPlanEntryUseCase
     private let calendar: Calendar
     private let now: @Sendable () -> Date
 
@@ -34,12 +36,13 @@ final class MealPlanViewModel {
     ) {
         useCase = GetMealPlanUseCase(repository: repository)
         saveUseCase = PlanMealUseCase(repository: repository, now: now)
+        deleteUseCase = DeleteMealPlanEntryUseCase(repository: repository)
         self.calendar = calendar
         self.now = now
         rangeStart = calendar.startOfDay(for: now())
     }
 
-    var isBusy: Bool { isLoading || isSaving }
+    var isBusy: Bool { isLoading || isSaving || deletingEntryID != nil }
 
     func makeDraft() -> MealEntryDraft {
         MealEntryDraft(scheduledDate: max(rangeStart, now().addingTimeInterval(3_600)))
@@ -143,6 +146,41 @@ final class MealPlanViewModel {
             hasLoaded = true
         } catch {
             errorMessage = "Meal saved. Unable to refresh the list. Refresh to try again."
+        }
+        return true
+    }
+
+    /// Removes the entry from storage; the list drops it right away so a failed refresh cannot bring it back.
+    func deleteEntry(id: UUID) async -> Bool {
+        guard !isBusy else { return false }
+        deletingEntryID = id
+        errorMessage = nil
+        defer {
+            deletingEntryID = nil
+            schedulePendingRefresh()
+        }
+
+        do {
+            try Task.checkCancellation()
+            try await deleteUseCase.execute(entryID: id)
+        } catch is CancellationError {
+            return false
+        } catch MealPreparationError.entryNotFound {
+            errorMessage = "This meal is no longer in your plan. Refresh to see the latest."
+            return false
+        } catch {
+            errorMessage = "Unable to delete your meal. Please try again."
+            return false
+        }
+
+        days = days.compactMap { day in
+            let entries = day.entries.filter { $0.id != id }
+            return entries.isEmpty ? nil : MealPlanDay(date: day.date, entries: entries)
+        }
+        do {
+            days = try await fetchDays()
+        } catch {
+            errorMessage = "Meal deleted. Unable to refresh the list. Refresh to try again."
         }
         return true
     }

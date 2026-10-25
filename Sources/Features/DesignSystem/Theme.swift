@@ -112,6 +112,13 @@ private struct RevealOnScroll: ViewModifier {
 }
 
 extension View {
+    /// Shows a card on the canvas inside a List: no row background, separator or default insets.
+    func canvasRow() -> some View {
+        listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+    }
+
     /// A machined, two-layer card: a faint outer tray holding the content plate.
     func bezelCard<Fill: ShapeStyle>(_ fill: Fill, padding: CGFloat = 18) -> some View {
         modifier(BezelCard(fill: fill, padding: padding))

@@ -87,6 +87,8 @@ private actor RecordingMealRepository: MealPlanningRepository {
         throw UnexpectedCall()
     }
     func updateMealPlanEntry(_ entry: MealPlanEntry) async throws { throw UnexpectedCall() }
+    func deleteIngredient(id: UUID) async throws { throw UnexpectedCall() }
+    func deleteMealPlanEntry(id: UUID) async throws { throw UnexpectedCall() }
 }
 
 private struct UnexpectedCall: Error {}
